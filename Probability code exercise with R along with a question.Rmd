@@ -1,0 +1,88 @@
+---
+title: "Probability code exercise with R along with questions"
+author: "Amirali Satvati"
+output:
+  html_document:
+    theme: cerulean
+    toc: true
+    toc_float: true
+    toc_depth: 2
+---
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exercise 1
+
+A coin is tossed 5 times. Let \( X \) represent the number of observed heads. Calculate the following probabilities:
+
+## 1.1 The probability of observing exactly 4 heads:
+
+```{r}
+dbinom(4, size = 5, prob = 0.5)
+```
+
+## 1.2 The probability of observing at least 2 heads:
+
+```{r}
+1 - pbinom(1, size = 5, prob = 0.5)
+```
+
+## 1.3 The probability of observing no heads:
+
+```{r}
+dbinom(0, size = 5, prob = 0.5)
+```
+
+# Exercise 2
+
+A die is rolled twice. Let \( X_1 \) and \( X_2 \) represent the outcomes of the first and second rolls, respectively. Define \( Y = \min(X_1, X_2) \). Calculate the following probabilities:
+
+## 2.1 The probability that \( Y < 5 \):
+
+```{r}
+mean(replicate(10000, {
+  min(sample(1:6, size = 1, replace = TRUE), sample(1:6, size = 1, replace = TRUE)) < 5
+}))
+```
+
+## 2.2 The probability that \( Y = 2 \):
+
+```{r}
+mean(replicate(10000, {
+  min(sample(1:6, size = 1, replace = TRUE), sample(1:6, size = 1, replace = TRUE)) == 2
+}))
+```
+
+## 2.3 The probability that \( Y \leq 3 \):
+
+```{r}
+mean(replicate(10000, {
+  min(sample(1:6, size = 1, replace = TRUE), sample(1:6, size = 1, replace = TRUE)) <= 3
+}))
+```
+
+# Exercise 3
+
+A bag contains 5 white marbles, 7 green marbles, and 12 blue marbles. Calculate the following probabilities:
+
+## 3.1 The probability that if 2 marbles are drawn (with replacement), both are white:
+
+```{r}
+wn <- 5
+gn <- 7
+bn <- 12
+nn <- wn + gn + bn
+
+p_both_white <- choose(wn, 2) / choose(nn, 2)
+p_both_white
+```
+
+## 3.2 The probability that if 3 marbles are drawn (with replacement), their colors are not identical:
+
+```{r}
+p_not_identical <- 1 - ((wn / nn)^3 + (gn / nn)^3 + (bn / nn)^3)
+p_not_identical
+```
