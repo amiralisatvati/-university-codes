@@ -1,0 +1,178 @@
+successfully downloaded text file (SHA: 1f71ae5fd78e67e09a2dbb94344c194fb9f15e28)
+---
+title: "تمرین فرایندهای تصادفی"
+author: "امیرعلی سطوتی"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    css: "optimized-theme.css"
+    theme: default
+    highlight: kate
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    df_print: paged
+    lang: fa
+---
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.profile-container {
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: 40px;
+  animation: fade-up 0.8s ease-out;
+}
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+  padding: 10px 25px;
+  border-radius: 50px;
+  color: white !important;
+  text-decoration: none !important;
+  font-weight: bold;
+  font-family: sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-linkedin {
+  background: linear-gradient(45deg, #0077b5, #00a0dc);
+}
+.btn-github {
+  background: linear-gradient(45deg, #333, #555);
+}
+.profile-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  filter: brightness(1.1);
+}
+.profile-btn i {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+</style>
+
+<div class="profile-container">
+  <a href="https://www.linkedin.com/in/amirali-satvati/" target="_blank" class="profile-btn btn-linkedin">
+    <i class="fab fa-linkedin"></i> LinkedIn
+  </a>
+  <a href="https://github.com/amiralisatvati" target="_blank" class="profile-btn btn-github">
+    <i class="fab fa-github"></i> GitHub
+  </a>
+</div>
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, digits = 2)
+knitr::knit_hooks$set(inline = function(x) {
+  if(is.numeric(x)) {
+    round(x, 2)
+  }
+})
+```
+
+# بخش اول: شبیه‌سازی زنجیره مارکوف
+
+
+```{r}
+set.seed(42)
+
+P <- matrix(c(0.5, 0.3, 0.2,
+              0.1, 0.6, 0.3,
+              0.2, 0.3, 0.5), 
+            nrow = 3, byrow = TRUE)
+
+colnames(P) <- rownames(P) <- c("A", "B", "C")
+
+P
+
+simulate_markov_chain <- function(P, start_state, n_steps) {
+  states <- colnames(P)
+  chain <- character(n_steps)
+  chain[1] <- start_state
+  
+  for (i in 2:n_steps) {
+    current_state <- chain[i - 1]
+    probs <- P[current_state, ]
+    chain[i] <- sample(states, size = 1, prob = probs)
+  }
+  
+  return(chain)
+}
+
+markov_chain <- simulate_markov_chain(P, start_state = "A", n_steps = 30)
+
+print(markov_chain)
+
+
+table(markov_chain)
+
+```
+
+<div class="box-result">
+  <p>
+  <strong>تحلیل زنجیره مارکوف:</strong>
+  </p>
+  <ul>
+    <li>با مشاهده فراوانی نسبی حضور در حالت‌ها، می‌توان به توزیع تقریباً پایای زنجیره (در بلندمدت) پی برد.</li>
+    <li>برای مثال اگر حالت B بیشترین فراوانی را داشته باشد، نشان می‌دهد که سیستم تمایل دارد بیشتر در این حالت باقی بماند یا به آن بازگردد.</li>
+  </ul>
+</div>
+
+# بخش دوم: تشخیص حالات جاذب، گذرا و بازگشتی
+
+
+```{r}
+
+is_absorbing <- function(P) {
+  absorbing_states <- which(diag(P) == 1)
+  return(absorbing_states)
+}
+
+is_absorbing(P)
+
+is_transient_or_recurrent <- function(P) {
+  n <- nrow(P)
+  I <- diag(n)
+  N <- solve(I - P)
+  return(N)
+}
+
+is_transient_or_recurrent(P)
+
+```
+
+<div class="box-result">
+  <p>
+  <strong>نتایج تحلیل حالات زنجیره:</strong>
+  </p>
+  <ul>
+    <li>در این ماتریس گذار، هیچ حالتی با احتمال ماندگاری ۱ (P<sub>ii</sub> = 1) وجود ندارد؛ بنابراین حالت جاذب (Absorbing State) نداریم.</li>
+    <li>ماتریس بنیادی N اطلاعاتی در مورد تعداد امیدی دفعات بازدید از هر حالت قبل از خروج از مجموعه حالات گذرا می‌دهد. با توجه به ساختار این ماتریس، می‌توان حالات را به گذرا و بازگشتی طبقه‌بندی کرد.</li>
+  </ul>
+</div>
+
+# بخش سوم: شبیه‌سازی فرآیند برنولی – تا رسیدن به 30 موفقیت
+
+
+```{r}
+set.seed(123)
+
+p <- 0.6
+
+successes <- 0
+trials <- 0
+
+while (successes < 30) {
+  trial <- rbinom(1, size = 1, prob = p)
+  trials <- trials + 1
+  successes <- successes + trial
+}
+
+trials
+
+```
