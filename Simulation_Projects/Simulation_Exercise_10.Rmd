@@ -1,0 +1,100 @@
+---
+title: "Exercise Chapter 4 - Non-parametric Tests"
+author: "Amirali Satvati"
+date: "1404/08/09"
+output:
+  html_document:
+    lang: fa
+    theme: bootstrap
+    highlight: tango
+    css: "mystyle1.css"
+    toc: true
+    toc_float: true
+    number_sections: true
+    pandoc_args: [
+      "--variable", "dir:rtl",
+      "--variable", "lang:fa"
+    ]
+---
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,digits = 2)
+knitr::knit_hooks$set(inline= function(x) {
+  if(is.numeric(x)) {
+    round(x,2)
+  }
+})
+```
+
+
+# Sign Test
+Checks if the median of the data is significantly different from 0.5.
+
+```{r}
+data <- c(0.34, 0.54, 0.85, 0.34, 0.21, 0.89, 0.20, 0.75, 0.36, 0.82, 0.12)
+mu0 <- 0.5
+signs <- sign(data - mu0)
+data1 <- signs[signs != 0]
+ds <- sum(data1==1)
+n<- length(data1)
+binom.test(x = ds,n =n,p = 0.5)
+```
+
+## Interpretation
+
+<div class="box">
+  <p>Given p-value = 1, there is no statistically significant difference between the observed success probability (0.45) and the hypothetical probability of 0.5; this difference is entirely due to chance.</p>
+
+</div>
+
+# Runs Test
+This test examines whether the data sequence is random (whether the data comes in clusters or randomly).
+
+
+```{r}
+library(DescTools)
+RunsTest(data)
+```
+
+## Interpretation
+
+<div class="box">
+ 
+  
+Since the p-value (0.1126) is greater than the common significance level (0.05), we have no reason to reject the null hypothesis (H0); therefore, the data sequence is considered random, and no non-random pattern or specific trend is observed in it.
+
+</div>
+# Counting Up/Down Run Lengths
+Checks how many times the data sequence was "Up" or "Down" and what the length of each run was.
+
+```{r}
+
+mcat <-round( 3.33*log(length(data))+1)   
+signs <- sign(diff(data))
+
+signs <- signs[signs != 0]
+
+runl <- rle(signs)$lengths
+
+obs_counts<- numeric(mcat)
+obss <- c(1:(mcat - 1), paste0(">=", mcat))
+
+
+for (len in runl) {
+  if (len >= mcat) {
+    
+    obs_counts[mcat] <- obs_counts[mcat] + 1
+  } else {
+  
+    obs_counts[len] <- obs_counts[len] + 1
+  }
+}
+
+print(obs_counts)
+```
+
+
+
+
+
+
