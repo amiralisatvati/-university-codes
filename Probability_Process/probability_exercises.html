@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Probability Theory Exercises with R</title>
+<style>
+body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+h1 { color: #2c3e50; }
+h2 { color: #2980b9; }
+pre { background-color: #f4f4f4; padding: 15px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<h1>Probability Theory Exercises with R</h1>
+
+<h2>Exercise: Random Variables and Distributions</h2>
+
+<h3>1. Discrete Probability Distributions</h3>
+<pre><code># Binomial distribution
+n <- 10; p <- 0.3
+x <- 0:n
+prob <- dbinom(x, n, p)
+plot(x, prob, type="h", lwd=2, col="blue")</code></pre>
+
+<h3>2. Continuous Distributions</h3>
+<pre><code># Normal distribution
+x <- seq(-4, 4, 0.01)
+y <- dnorm(x)
+plot(x, y, type="l", col="red", lwd=2)</code></pre>
+
+<h3>3. Expected Value and Variance</h3>
+<p>Calculating E[X] and Var(X) for various distributions.</p>
+
+<p><em>Generated from probability_exercises.Rmd</em></p>
+</body>
+</html>

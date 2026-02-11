@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Fundamental Assumptions of Inferential Methods</title>
+<style>
+body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+h1 { color: #d35400; }
+</style>
+</head>
+<body>
+<h1>Fundamental Assumptions of Inferential Methods</h1>
+
+<h2>Key Assumptions</h2>
+<ol>
+<li><strong>Independence:</strong> Observations are independent of each other</li>
+<li><strong>Normality:</strong> Data follows a normal distribution</li>
+<li><strong>Homoscedasticity:</strong> Equal variances across groups</li>
+<li><strong>Linearity:</strong> Linear relationship between variables</li>
+</ol>
+
+<h2>Diagnostics</h2>
+<pre><code># Normality test
+shapiro.test(residuals)
+
+# Homoscedasticity test
+bptest(model)
+
+# Independence test
+durbinWatsonTest(model)</code></pre>
+
+<p><em>Lab exercise material</em></p>
+</body>
+</html>
