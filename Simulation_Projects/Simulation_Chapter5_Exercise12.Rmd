@@ -1,0 +1,276 @@
+---
+title: "Exercise 14 - Chapter 5 Distribution Simulation"
+author: "Amirali Satvati"
+date: "`r format(Sys.Date(), '%Y/%m/%d')`"
+output:
+  html_document:
+    lang: fa
+    css: "advanced-design-system.css"
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    df_print: paged
+    highlight: tango
+    self_contained: false
+    fig_caption: true
+    fig_width: 10
+    fig_height: 6
+    pandoc_args: [
+      "--variable", "dir:rtl",
+      "--variable", "lang:fa"
+    ]
+---
+
+<style>
+pre {
+  direction: rtl !important; 
+}
+
+pre code {
+  direction: ltr !important;
+  text-align: left !important;
+}
+</style>
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = 'center',
+  dpi = 300,
+  cache = TRUE
+)
+
+```
+
+# Question 1
+## Part 1 
+ Using the inverse transform method, derive the simulation formula for $X$ (in terms of a variable $U \sim \text{Uniform}(0, 1)$).
+
+---
+Solved by hand
+---
+
+## Part 2 
+ Using the derived formula, generate a random sample of 100 observations ($n=100$) from the Weibull distribution with parameters $k = 1.5$ and $\lambda = 1$.
+ 
+```{r}
+set.seed(456)
+n <- 100     
+k <- 1.5      
+lambda <- 1   
+
+x <- lambda * (-log(runif(n)))^(1/k)
+mean(x)
+boxplot(x)
+
+
+
+```
+
+## Part 3
+Plot the histogram of the generated data (in density, not frequency) and overlay the theoretical PDF (probability density function) on it for comparison.
+```{r}
+hist(x, freq = FALSE)
+curve(dweibull(x, shape = k, scale = lambda), 
+      add = TRUE, 
+      col = "red", 
+      lwd = 2)
+plot(qweibull(ppoints(n), shape = k, scale = lambda))
+plot(x)
+```
+
+## Part 4 
+Plot the empirical cumulative distribution function (ECDF) of the data alongside the theoretical CDF given in the question in a single plot for comparison.
+```{r}
+
+plot(ecdf(x), col = "blue")   
+
+
+curve(pweibull(x, shape = k, scale = lambda), 
+      add = TRUE,      
+      col = "red",      
+      lwd = 2)          
+
+```
+
+
+
+```{r}
+
+set.seed(456)
+n <- 100   
+k <- 1.5     
+lambda <- 1 
+
+u <- runif(n)                 
+x <- lambda * (-log(u))^(1/k) 
+
+# Display first few samples
+print("Weibull samples generated (x):")
+print(head(x))
+
+
+hist(x, 
+     freq = FALSE, 
+     main = "Part (c): Histogram of data vs Theoretical PDF (Weibull)",
+     xlab = "X values", 
+     ylab = "Density",
+     col = "lightblue",
+     breaks = 15) 
+
+curve(dweibull(x, shape = k, scale = lambda), 
+      from = 0, 
+      to = max(x), 
+      add = TRUE,       
+      col = "red",     
+      lwd = 2)          
+
+
+legend("topright", 
+       legend = c("Simulated data", "Theoretical Weibull PDF"), 
+       col = c("lightblue", "red"), 
+       pch = c(15, NA),  
+       lty = c(NA, 1))   
+
+
+plot(ecdf(x), 
+     main = "Part (d): Empirical CDF vs Theoretical CDF (Weibull)",
+     xlab = "X values",
+     ylab = "F(x) - Cumulative Probability",
+     verticals = TRUE,  
+     do.points = FALSE,  
+     col = "darkgreen")
+
+curve(pweibull(x, shape = k, scale = lambda), 
+      from = 0, 
+      to = max(x), 
+      add = TRUE, 
+      col = "blue",
+      lwd = 2)
+
+legend("bottomright", 
+       legend = c("Empirical CDF (ECDF)", "Theoretical Weibull CDF"), 
+       col = c("darkgreen", "blue"), 
+       lwd = 2)
+```
+
+# Simulating Discrete Distributions with Inverse Transform Method
+
+```{r}
+
+simulate <- function(n, pmf) {
+  
+  results <- numeric(n)
+ 
+  k <- length(pmf) 
+  
+  for (i in 1:n) {
+   
+    u <- runif(1)
+    
+
+    x <- 1          
+    cdf <- pmf[x] 
+    
+  while (u > cdf && x < k) {
+      x <- x + 1
+      cdf <- cdf+ pmf[x]
+    }
+    
+    results[i] <- x
+  }
+  
+  return(results)
+}
+
+my_pmf <- c(0.1,0.15,0.25,0.2,0.15,0.15)
+sum(my_pmf) 
+
+set.seed(456)
+sims <- simulate(n = 10000, pmf = my_pmf)
+
+
+observed_probs <- table(sims) / 10000
+print(observed_probs)
+print(my_pmf)
+```
+
+```{r}
+
+
+simulate_hist <- function(n, h, F_h) {
+
+  U <- runif(n)
+  
+
+  j <- findInterval(U, F_h, all.inside = TRUE)
+  
+    h_left <- h[j]  
+  h_right <- h[j+1]   
+  F_left <- F_h[j]  
+  F_right <- F_h[j+1]   
+
+  
+  slope_h <- h_right - h_left  
+  slope_F <- F_right - F_left  
+  
+
+  ratio <- (U - F_left) / slope_F
+  
+
+  ratio[slope_F == 0] <- 0
+  
+
+  X <- h_left + ratio * slope_h
+  
+  return(X)
+}
+```
+
+
+
+
+```{r}
+intervals <- c(0,2,5,10,15)
+
+
+rel_freq <- c(0.15,0.3,0.4,0.15)
+
+cum_probs <- c(0, cumsum(rel_freq))
+print(intervals)
+
+print(cum_probs)
+
+set.seed(456)
+
+n_sims <- 10000
+sims <- simulate_hist(n = n_sims, h = intervals, F_h = cum_probs)
+
+
+
+print(summary(sims))
+
+observed_counts <- table(cut(sims, breaks = intervals, right = FALSE, include.lowest = TRUE))
+observed_probs <- observed_counts / n_sims
+
+print(observed_probs)
+print(rel_freq)
+
+hist(sims, breaks = intervals)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

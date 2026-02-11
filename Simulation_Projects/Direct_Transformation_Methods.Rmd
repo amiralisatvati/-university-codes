@@ -1,0 +1,197 @@
+---
+title: "Random Variable Simulation"
+subtitle: "Direct Transformation Methods (Inverse Transform and Box-Muller)"
+author: "Amirali Satvati"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    css: "optimized-theme.css"
+    theme: default
+    highlight: kate
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    df_print: paged
+    lang: fa
+---
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.profile-container {
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: 40px;
+  animation: fade-up 0.8s ease-out;
+}
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+  padding: 10px 25px;
+  border-radius: 50px;
+  color: white !important;
+  text-decoration: none !important;
+  font-weight: bold;
+  font-family: sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-linkedin {
+  background: linear-gradient(45deg, #0077b5, #00a0dc);
+}
+.btn-github {
+  background: linear-gradient(45deg, #333, #555);
+}
+.profile-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  filter: brightness(1.1);
+}
+.profile-btn i {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+</style>
+
+<div class="profile-container">
+  <a href="https://www.linkedin.com/in/amirali-satvati/" target="_blank" class="profile-btn btn-linkedin">
+    <i class="fab fa-linkedin"></i> LinkedIn
+  </a>
+  <a href="https://github.com/amiralisatvati" target="_blank" class="profile-btn btn-github">
+    <i class="fab fa-github"></i> GitHub
+  </a>
+</div>
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, digits = 2)
+knitr::knit_hooks$set(inline = function(x) {
+  if(is.numeric(x)) {
+    round(x, 2)
+  }
+})
+```
+
+# Part 1: Direct Method (Inverse Transform)
+
+The Direct Method, often called the **Inverse Transform Method**, is one of the fundamental methods for generating random variables. Its main feature is being "direct"; meaning that unlike trial-and-error methods (such as rejection sampling), each uniform random number ($U$) is transformed directly to a random variable from the target distribution through a one-to-one and deterministic mapping.
+
+The governing principle is the Probability Integral Transform theorem: if $U \sim Uniform(0,1)$, then $X = F^{-1}(U)$ will have the cumulative distribution function $F$.
+
+In this section, we simulate two distributions:
+1.  **Cauchy Distribution:** which has a simple analytical inverse.
+2.  **Student's t-distribution:** which uses direct numerical method (calculating inverse using built-in functions).
+
+---
+
+## Direct Simulation of Cauchy Distribution
+
+The Cauchy distribution is an excellent example for the direct analytical method, as its CDF has a closed form and its inverse is simple.
+
+### a) Deriving the Direct Formula
+The CDF of the Cauchy distribution with location parameter $\mu$ and scale parameter $\sigma$:
+
+$$F(x; \mu, \sigma) = \frac{1}{\pi} \arctan\left(\frac{x - \mu}{\sigma}\right) + \frac{1}{2}$$
+
+To find the direct formula for generating $X$, we solve $F(x) = U$:
+
+$$U = \frac{1}{\pi} \arctan\left(\frac{x - \mu}{\sigma}\right) + \frac{1}{2}$$
+
+By rearranging and taking the inverse tangent, we arrive at the explicit formula:
+
+$$X = \mu + \sigma \cdot \tan\left[\pi (U - 0.5)\right]$$
+
+---
+
+## Direct Simulation of Student's t-distribution
+
+In the t-distribution, the algebraic form of the CDF involves integrals (incomplete beta functions) that are not simply inverted analytically. However, our method is still **"direct"**, with the difference that solving $F(x)=U$ is done using precise numerical methods.
+
+<div class="box-info">
+Here we use the Quantile Function. The `qt` function in R is exactly $F^{-1}(U)$, which maps $U$ directly to the corresponding value in the t-distribution.
+</div>
+
+### R Code Implementation (Direct Method)
+
+```{r setup_cauchy}
+set.seed(42)
+
+mu <- 0    
+sigma <- 1 
+U <- runif(1000, 0, 1)
+cauchy_sim <- mu + sigma * tan(pi * (U - 0.5))
+t_sim <- qt(U, df = 10)
+
+head(data.frame(Uniform=U, Cauchy=cauchy_sim, T_Student=t_sim))
+```
+
+---
+
+# Part 2: Box-Muller Method
+
+The Box-Muller method is also a clever technique for generating normal variables. This method is also in the category of exact transformation methods, which uses polar coordinate properties to transform two uniform variables into two normal variables.
+
+### Transformation Algorithm
+
+This method uses two uniform variables $U_1, U_2$ and with the following transformations generates two independent standard normal variables $Z_1, Z_2$:
+
+$$Z_1 = \sqrt{-2\ln(U_1)} \cos(2\pi U_2)$$
+$$Z_2 = \sqrt{-2\ln(U_1)} \sin(2\pi U_2)$$
+
+### Implementation and Analysis in R
+
+In the code below, in addition to generating data, we examine the normality of the data by plotting histograms and QQ plots.
+
+```{r box_muller_sim, fig.align='center', message=FALSE, warning=FALSE}
+set.seed(42)
+
+U1 <- runif(1000)
+U2 <- runif(1000)
+
+
+Z1 <- sqrt(-2 * log(U1)) * cos(2 * pi * U2)
+Z2 <- sqrt(-2 * log(U1)) * sin(2 * pi * U2)
+
+
+hist(Z1, prob=TRUE)
+curve(dnorm(x, mean=0, sd=1), add=TRUE, col="#f59e0b", lwd=3)
+
+
+qqnorm(Z1, col="#0f766e", pch=19, main="QQ Plot for Z1")
+qqline(Z1, col = "#ef4444", lwd = 2)
+
+
+shapiro.test(Z1)
+
+```
+
+<div class="box-result">
+**Simulation Results Interpretation:**
+
+1.  **Histogram:** The bar chart overlaps well with the bell curve (orange). This means the mean is around 0 and standard deviation is around 1.
+2.  **QQ Plot:** The data points (green) line exactly on the red line, indicating a complete normal distribution.
+3.  **Shapiro Test Statistic (W):** The value $W = 0.9982$ is very close to 1. This number shows excellent fit of the generated data with the theoretical normal distribution.
+</div>
+
+## Linear Transformation of Normal Distribution
+
+Finally, we apply a linear transformation to the standard normal variable $Z_1$ to create a variable with desired mean and variance. If $X = \sigma Z + \mu$, we expect mean 19 and standard deviation 3.7.
+
+```{r linear_transform}
+# Linear transformation: mean 19 and standard deviation 3.7
+X1 <- 3.7 * Z1 + 19
+
+
+hist(X1, prob=TRUE)
+curve(dnorm(x, mean=19, sd=3.7), add=TRUE, col="#059669", lwd=3)
+shapiro.test(X1)
+```
+
+<div class="box-result"> Analysis: After applying the linear transformation, the distribution shape remains normal (as confirmed by the Shapiro test), but the distribution center has shifted to 19 and its spread has changed according to the coefficient 3.7. </div>
+
+<div class="report-footer">
+  Design and Implementation: Amirali Satvati | Fall 2024
+</div>
