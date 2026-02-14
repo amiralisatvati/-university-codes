@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: ee527327628b0815e992de15505dae385b6a4bc5)
 library(shiny)
 library(car)
 library(DT)
