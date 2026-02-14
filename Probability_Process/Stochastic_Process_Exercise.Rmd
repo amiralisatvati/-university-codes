@@ -1,178 +1,355 @@
-successfully downloaded text file (SHA: 1f71ae5fd78e67e09a2dbb94344c194fb9f15e28)
 ---
-title: "تمرین فرایندهای تصادفی"
+title: "تحلیل مارکوف و شبیه‌سازی وضعیت‌های مختلف"
 author: "امیرعلی سطوتی"
 date: "`r Sys.Date()`"
 output:
   html_document:
-    css: "optimized-theme.css"
-    theme: default
-    highlight: kate
     toc: true
-    toc_float:
-      collapsed: false
-      smooth_scroll: true
-    number_sections: true
-    df_print: paged
-    lang: fa
+    toc_float: true
+    toc_depth: 3       # عمق فهرست مطالب (تا سطح 3)
+    theme: "cosmo"     # انتخاب تم برای بهبود ظاهر
+    highlight: "kate"  # انتخاب استایل رنگی برای کدها
+    code_folding: hide # قابلیت جمع و باز کردن بلوک‌های کد
+    df_print: "paged"  # جداول به صورت صفحه‌بندی‌شده نمایش داده شوند
 ---
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<style>
-.profile-container {
-  text-align: center;
-  margin-top: -20px;
-  margin-bottom: 40px;
-  animation: fade-up 0.8s ease-out;
-}
-.profile-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 10px;
-  padding: 10px 25px;
-  border-radius: 50px;
-  color: white !important;
-  text-decoration: none !important;
-  font-weight: bold;
-  font-family: sans-serif;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-.btn-linkedin {
-  background: linear-gradient(45deg, #0077b5, #00a0dc);
-}
-.btn-github {
-  background: linear-gradient(45deg, #333, #555);
-}
-.profile-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-  filter: brightness(1.1);
-}
-.profile-btn i {
-  margin-right: 10px;
-  font-size: 1.2em;
-}
-</style>
-
-<div class="profile-container">
-  <a href="https://www.linkedin.com/in/amirali-satvati/" target="_blank" class="profile-btn btn-linkedin">
-    <i class="fab fa-linkedin"></i> LinkedIn
-  </a>
-  <a href="https://github.com/amiralisatvati" target="_blank" class="profile-btn btn-github">
-    <i class="fab fa-github"></i> GitHub
-  </a>
-</div>
 
 
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE, digits = 2)
-knitr::knit_hooks$set(inline = function(x) {
-  if(is.numeric(x)) {
-    round(x, 2)
-  }
-})
-```
+# مقدمه
 
-# بخش اول: شبیه‌سازی زنجیره مارکوف
+این پروژه به شبیه‌سازی و تجزیه‌وتحلیل یک مدل مارکوف با استفاده از ماتریس‌های انتقال مختلف پرداخته است. در این پروژه، سیستم‌های مختلف با استفاده از شبیه‌سازی‌های تصادفی بررسی می‌شوند تا ویژگی‌های مختلف مانند وضعیت‌های جاذب، گذرا و بازگشتی شناسایی شوند.
 
+------------------------------------------------------------------------
+
+# تمرین یک
+
+## قسمت اول
+
+### الف
 
 ```{r}
-set.seed(42)
+p=matrix(c(0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,1,0.5,0.5,0,0,0,0,1,1,1,0.25,0,0,0 ,1,1,1      ,0.75,0,1,0,1,1,1,1,0,1,0,1,1,1,1,0.5,1,0,1,1,1,1,1,1,1),7,8) 
+p
 
-P <- matrix(c(0.5, 0.3, 0.2,
-              0.1, 0.6, 0.3,
-              0.2, 0.3, 0.5), 
-            nrow = 3, byrow = TRUE)
 
-colnames(P) <- rownames(P) <- c("A", "B", "C")
+x=c() 
+ 
+x[1]=1 
+ 
+ for(n in 2:101){ 
+ 
+   u=runif(1) 
+ 
+   for(j in 1:5){ 
+ 
+     if(p[x[n-1],j]<=u& u<=p[x[n-1],j+1]) 
+ 
+       x[n]=j}} 
+x
+```
 
-P
+------------------------------------------------------------------------
 
-simulate_markov_chain <- function(P, start_state, n_steps) {
-  states <- colnames(P)
-  chain <- character(n_steps)
-  chain[1] <- start_state
+### ب
+
+وضعيت های 4 و 5 و 6 گذرا هستند و وضعيت 7 جاذب و وضعيت های 1 و 2 و 3 بازگشتی
+
+خير چون از بعضی وضعيت ها به بعض ی وضعيت ها راهی وجود ندارد \*\*\* \### ج
+
+```{r}
+
+p <- matrix(c(0, 0, 0, 0, 0, 0.5, 1, 0.5, 0.5, 1, 1, 1), 3, 4)
+
+y <- numeric(10000)
+
+for (i in 1:10000) {
+  x <- numeric()
+  x[1] <- 1
+  d <- 0
+  n <- 2
   
-  for (i in 2:n_steps) {
-    current_state <- chain[i - 1]
-    probs <- P[current_state, ]
-    chain[i] <- sample(states, size = 1, prob = probs)
+  while (d == 0) {
+    u <- runif(1)
+    for (j in 1:3) {
+      if (p[x[n - 1], j] <= u & u <= p[x[n - 1], j + 1]) {
+        x[n] <- j
+      }
+    }
+    if (x[n] == 1) {
+      d <- 1
+    }
+    n <- n + 1
   }
   
-  return(chain)
+  y[i] <- n - 2
 }
 
-markov_chain <- simulate_markov_chain(P, start_state = "A", n_steps = 30)
+mean(y == 5)
 
-print(markov_chain)
-
-
-table(markov_chain)
 
 ```
 
-<div class="box-result">
-  <p>
-  <strong>تحلیل زنجیره مارکوف:</strong>
-  </p>
-  <ul>
-    <li>با مشاهده فراوانی نسبی حضور در حالت‌ها، می‌توان به توزیع تقریباً پایای زنجیره (در بلندمدت) پی برد.</li>
-    <li>برای مثال اگر حالت B بیشترین فراوانی را داشته باشد، نشان می‌دهد که سیستم تمایل دارد بیشتر در این حالت باقی بماند یا به آن بازگردد.</li>
-  </ul>
-</div>
+------------------------------------------------------------------------
 
-# بخش دوم: تشخیص حالات جاذب، گذرا و بازگشتی
+##قسمت دو \### دال و ه
 
+```{r message=FALSE, paged.print=FALSE}
+p=matrix(c(0,0,0,0,0,1,1/4,0,0,0,1,3/4,0,1,0,1,1,0,1,0,1,1,1/2,1,0,1,1,1,1,1)
+,5,6) 
+
+
+SA = 0
+SB = 0
+Na = 0
+NB = 0
+for (i in 1:10000) {
+  x = c()
+  x[1] = 2
+  A = 0
+  B = 0
+  n = 2
+  while (n) {
+    u = runif(1)
+    for (j in 1:5) {
+      if (p[x[n - 1], j] <= u & u <= p[x[n - 1], j + 1]) 
+        x[n] = j
+    }
+    if (x[n] == 5) {
+      B = 1
+      SB = SB + n - 1
+      NB = NB + 1
+    }
+    if (x[n] == 1) {
+      A = 1
+      SA = SA + n - 1
+      Na = Na + 1
+    }
+    if (B == 1 | A == 1) break
+    n = n + 1
+  }
+}
+SA / Na
+SB / NB
+Na / 10000
+NB / 10000
+```
 
 ```{r}
-
-is_absorbing <- function(P) {
-  absorbing_states <- which(diag(P) == 1)
-  return(absorbing_states)
+SA = 0
+SB = 0
+Na = 0
+NB = 0
+for (i in 1:10000) {
+  x = c()
+  x[1] = 3
+  A = 0
+  B = 0
+  n = 2
+  while (n) {
+    u = runif(1)
+    for (j in 1:5) {
+      if (p[x[n - 1], j] <= u & u <= p[x[n - 1], j + 1]) 
+        x[n] = j
+    }
+    if (x[n] == 5) {
+      B = 1
+      SB = SB + n - 1
+      NB = NB + 1
+    }
+    if (x[n] == 1) {
+      A = 1
+      SA = SA + n - 1
+      Na = Na + 1
+    }
+    if (B == 1 | A == 1) break
+    n = n + 1
+  }
 }
-
-is_absorbing(P)
-
-is_transient_or_recurrent <- function(P) {
-  n <- nrow(P)
-  I <- diag(n)
-  N <- solve(I - P)
-  return(N)
-}
-
-is_transient_or_recurrent(P)
+SA/Na 
 
 ```
 
-<div class="box-result">
-  <p>
-  <strong>نتایج تحلیل حالات زنجیره:</strong>
-  </p>
-  <ul>
-    <li>در این ماتریس گذار، هیچ حالتی با احتمال ماندگاری ۱ (P<sub>ii</sub> = 1) وجود ندارد؛ بنابراین حالت جاذب (Absorbing State) نداریم.</li>
-    <li>ماتریس بنیادی N اطلاعاتی در مورد تعداد امیدی دفعات بازدید از هر حالت قبل از خروج از مجموعه حالات گذرا می‌دهد. با توجه به ساختار این ماتریس، می‌توان حالات را به گذرا و بازگشتی طبقه‌بندی کرد.</li>
-  </ul>
-</div>
+```{r}
+SA = 0
+SB = 0
+Na = 0
+NB = 0
+for (i in 1:10000) {
+  x = c()
+  x[1] = 3
+  A = 0
+  B = 0
+  n = 2
+  while (n) {
+    u = runif(1)
+    for (j in 1:5) {
+      if (p[x[n - 1], j] <= u & u <= p[x[n - 1], j + 1]) 
+        x[n] = j
+    }
+    if (x[n] == 5) {
+      B = 1
+      SB = SB + n - 1
+      NB = NB + 1
+    }
+    if (x[n] == 1) {
+      A = 1
+      SA = SA + n - 1
+      Na = Na + 1
+    }
+    if (B == 1 | A == 1) break
+    n = n + 1
+  }
+}
+SA / Na
+SB / NB
+Na / 10000
+NB / 10000
 
-# بخش سوم: شبیه‌سازی فرآیند برنولی – تا رسیدن به 30 موفقیت
+```
 
+```{R}
+SA = 0
+SB = 0
+Na = 0
+NB = 0
+for (i in 1:10000) {
+  x = c()
+  x[1] = 4
+  A = 0
+  B = 0
+  n = 2
+  while (n) {
+    u = runif(1)
+    for (j in 1:5) {
+      if (p[x[n - 1], j] <= u & u <= p[x[n - 1], j + 1]) 
+        x[n] = j
+    }
+    if (x[n] == 5) {
+      B = 1
+      SB = SB + n - 1
+      NB = NB + 1
+    }
+    if (x[n] == 1) {
+      A = 1
+      SA = SA + n - 1
+      Na = Na + 1
+    }
+    if (B == 1 | A == 1) break
+    n = n + 1
+  }
+}
+SB / NB
+NB / 10000
+```
+
+------------------------------------------------------------------------
+
+# سوال دو
+
+### الف وب
 
 ```{r}
-set.seed(123)
+p=matrix(c(0,0,0,0,0,1,0.5,0,0,0,1,0.5,1/3,0,0,1,1,2/3,0.5,0,1,1,2/3,0.5,0,1
+,1,1,1,1),5,6) 
 
-p <- 0.6
 
-successes <- 0
-trials <- 0
+x = c()
+x[1] = 4
 
-while (successes < 30) {
-  trial <- rbinom(1, size = 1, prob = p)
-  trials <- trials + 1
-  successes <- successes + trial
+for (n in 2:101) {
+  u = runif(1)
+  for (j in 1:5) {
+    if (p[x[n - 1], j] <= u & u <= p[x[n - 1], j + 1]) 
+      x[n] = j
+  }
 }
 
-trials
+x
+
+```
+
+وضعيت های 1 و 5 جاذب و وضعيت های 2 و3 و 4 گذرا هستند \*\*\* \### قسمت ج
+
+```{r}
+p = matrix(c(0, 0, 0, 0, 0, 1, 0.5, 0, 0, 0, 1, 0.5, 1/3, 0, 0, 1, 1, 2/3, 0.5, 0, 1, 1, 2/3, 0.5, 0, 1, 1, 1, 1, 1), 5, 6)
+
+sa = 0
+sb = 0
+na = 0
+nb = 0
+
+for (i in 1:10000) {
+  x = c()
+  x[1] = 3
+  a = 0
+  b = 0
+  n = 2
+  while (n) {
+    u = runif(1)
+    for (j in 1:5) {
+      if (p[x[n-1], j] <= u & u <= p[x[n-1], j+1]) x[n] = j
+    }
+    if (x[n] == 1) {
+      a = 1
+      sa = sa + n - 1
+      na = na + 1
+    }
+    if (x[n] == 5) {
+      b = 1
+      sb = sb + n - 1
+      nb = nb + 1
+    }
+    if (a == 1 | b == 1) break
+    n = n + 1
+  }
+}
+
+sa / na
+sb / nb
+na / 10000
+nb / 10000
+
+```
+
+------------------------------------------------------------------------
+
+# تمرین سوم
+
+```{r}
+y=c()
+for(i in 1:10000){
+n=0
+x=0
+while(x<30){
+if(runif(1)<0.1)
+x=x+1
+else
+x=x
+n=n+1}
+y[i]=n}
+mean(y)
+
+```
+
+------------------------------------------------------------------------
+
+# تمرین چهارم
+
+```{r}
+y=c()
+for(i in 1:10000){
+  n=1
+  x=3
+  while(x){
+    if(sum(runif(1)<0.75)==1){ 
+      x=x+1
+    } else {
+      x=x-1
+    }
+    if(x==10|x==0) break
+    n=n+1
+  }
+  y[i]=n
+}
+mean(y)
 
 ```
