@@ -1,3 +1,4 @@
+
 ---
 title: "Fundamental Assumptions of Inferential Methods"
 author: "امیرعلی سطوتی"
