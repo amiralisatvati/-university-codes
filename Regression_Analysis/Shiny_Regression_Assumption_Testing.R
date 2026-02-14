@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 89cd2f08dc7c68d963aa9a627dc13e3eeb3f46b9)
 library(shiny)
 library(ggplot2)
 library(car)
