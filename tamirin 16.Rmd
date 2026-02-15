@@ -1,0 +1,319 @@
+---
+title: "شبیه‌سازی توزیع‌های آماری"
+subtitle: "روش‌های تقریبی و رد-پذیرش (Acceptance-Rejection)"
+author:
+  - "امیرعلی سطوتی"
+  
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    css: "optimized-theme.css"
+    theme: default
+    highlight: pygments
+    toc: true
+    toc_float: true
+    lang: fa
+---
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* استایل‌های مربوط به پروفایل و دکمه‌ها */
+.profile-container {
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: 40px;
+  animation: fade-up 0.8s ease-out;
+}
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+  padding: 10px 25px;
+  border-radius: 50px;
+  color: white !important;
+  text-decoration: none !important;
+  font-weight: bold;
+  font-family: sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-linkedin {
+  background: linear-gradient(45deg, #0077b5, #00a0dc);
+}
+.btn-github {
+  background: linear-gradient(45deg, #333, #555);
+}
+.profile-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  filter: brightness(1.1);
+}
+.profile-btn i {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+
+/* استایل‌های باکس‌ها (اگر فایل CSS خارجی لود نشود، این‌ها پیش‌فرض هستند) */
+.main-container { direction: rtl; text-align: right; }
+.box-concept {
+  background-color: #e3f2fd;
+  border-right: 5px solid #2196f3;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+.box-math {
+  background-color: #f3e5f5;
+  border-right: 5px solid #9c27b0;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+.box-info {
+  background-color: #e8f5e9;
+  border-right: 5px solid #4caf50;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+.box-result {
+  background-color: #fff3e0;
+  border-right: 5px solid #ff9800;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+.report-header {
+  text-align: right;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+.math-display {
+  text-align: center;
+  margin: 15px 0;
+  font-size: 1.1em;
+}
+</style>
+
+<div class="profile-container">
+  <a href="#" target="_blank" class="profile-btn btn-linkedin">
+    <i class="fab fa-linkedin"></i> LinkedIn
+  </a>
+  <a href="#" target="_blank" class="profile-btn btn-github">
+    <i class="fab fa-github"></i> GitHub
+  </a>
+</div>
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, digits = 2)
+knitr::knit_hooks$set(inline = function(x) {
+  if(is.numeric(x)) {
+    round(x, 2)
+  }
+})
+```
+
+<div class="report-header">
+  <span style="font-weight:bold; color:var(--primary);">تمرین  17  شبیه  سازی استاد جباری</span>
+  <span style="font-size:0.9em; float:left;">نیمسال جاری</span>
+</div>
+این کد  رو  درست کن
+
+# بخش اول: روش تقریبی (Approximate Method)
+
+<div class="main-container">
+
+<div class="box-concept">
+
+**مفهوم کلی: قضیه حد مرکزی**
+
+کل ایده این بخش این است که گاهی تولید دقیق اعداد تصادفی (مثلاً برای توزیع نرمال یا پواسون) سخت یا زمان‌بر است. در عوض، ما از قوانین ریاضی مانند **قضیه حد مرکزی (CLT)** استفاده می‌کنیم تا با روشی ساده‌تر و سریع‌تر، اعدادی تولید کنیم که تقریباً همان توزیع را دارند.
+
+اگر تعداد زیادی نمونه تصادفی ($n$ بزرگ) از هر توزیعی داشته باشیم، میانگین (یا مجموع) آن‌ها شبیه به توزیع نرمال رفتار می‌کند.
+
+</div>
+
+<div class="box-math">
+
+**فرمول پایه و شبیه‌سازی نرمال استاندارد**
+
+اگر $X_1, ..., X_n$ متغیرهای تصادفی با میانگین $\mu$ و واریانس $\sigma^2$ باشند، برای $n$ بزرگ داریم:
+
+<div class="math-display">
+$$Z = \frac{\bar{X}_n - \mu}{\sigma / \sqrt{n}} \approx N(0,1)$$
+</div>
+
+**تکنیک طلایی ($n=12$):**
+برای تولید توزیع نرمال استاندارد ($Z$)، ساده‌ترین راه استفاده از ۱۲ عدد تصادفی یکنواخت $U(0,1)$ است. چرا ۱۲؟ چون واریانس توزیع یکنواخت برابر $\frac{1}{12}$ است و محاسبات بسیار ساده می‌شود:
+
+<div class="math-display">
+$$Z = \sum_{i=1}^{12} U_i - 6 \approx N(0,1)$$
+</div>
+
+</div>
+
+<div class="box-info">
+
+**شبیه‌سازی توزیع پواسون ($P(\lambda)$)**
+
+برای تولید عدد تصادفی پواسون، از تقریب دوجمله‌ای به نرمال یا پواسون استفاده می‌کنیم.
+اگر در توزیع دوجمله‌ای $B(n,p)$، مقدار $n$ بزرگ و $p$ کوچک باشد، توزیع شبیه پواسون با $\lambda = np$ می‌شود.
+
+**الگوریتم:**
+۱. محاسبه مقدار $n$: فرمول $n = \max(30, \lceil 20\lambda \rceil)$.
+۲. تولید $n$ عدد تصادفی یکنواخت.
+۳. شمارش اعدادی که کمتر یا مساوی $p=0.05$ هستند.
+
+فرمول ریاضی شمارش:
+$$x = \sum_{i=1}^{n} I(u_i \le 0.05)$$
+
+</div>
+
+<div class="box-result">
+
+**پیاده‌سازی در R**
+
+در کد زیر، تابع `sim_poisson` دقیقاً بر اساس الگوریتم تقریبی فوق پیاده‌سازی شده است:
+
+```{r}
+sim_poisson <- function(L,p) {
+  
+  
+  p <- p
+  
+  n <- max(30, (20*L))
+  
+  
+  X <- rbinom(n = 1, size = n, prob = p)
+  
+  return(X)
+}
+
+replicate(10, sim_poisson(L = 3,0.05))
+```
+
+</div>
+
+</div>
+
+---
+
+# بخش دوم: روش رد و پذیرش (Acceptance-Rejection)
+
+<div class="main-container">
+
+<div class="box-concept">
+
+**معرفی روش**
+
+این روش یکی از تکنیک‌های اصلی در شبیه‌سازی آماری برای تولید اعداد تصادفی از توزیع‌های پیچیده است. زمانی که نمی‌توانیم مستقیماً از توزیع هدف $f_X(x)$ نمونه‌گیری کنیم، از یک توزیع پیشنهادی ساده‌تر $f_Y(x)$ کمک می‌گیریم.
+
+</div>
+
+<div class="box-math">
+
+**قضیه ۴.۵.۴ (شرط پوشش)**
+
+باید یک مقدار ثابت $c > 0$ وجود داشته باشد به طوری که برای تمام مقادیر $x$:
+
+<div class="math-display">
+$$f_X(x) \le c f_Y(x), \quad \forall x \in \mathbb{R}$$
+</div>
+
+این یعنی تابع چگالی پیشنهادی ضرب‌در $c$ باید همواره بالاتر از تابع هدف باشد. بهترین $c$ برابر است با ماکزیمم نسبت $f_X(x)/f_Y(x)$.
+
+</div>
+
+<div class="box-info">
+
+**الگوریتم شبیه‌سازی**
+
+1. **تولید کاندید:** یک مقدار $X^*$ از توزیع پیشنهادی $Y$ تولید کنید.
+2. **تولید یکنواخت:** یک عدد $U \sim U(0,1)$ تولید کنید.
+3. **شرط رد/پذیرش:** اگر شرط زیر برقرار بود، $X^*$ را به عنوان نمونه نهایی بپذیرید:
+
+<div class="math-display">
+$$U \le \frac{f_X(X^*)}{c f_Y(X^*)}$$
+</div>
+
+احتمال پذیرش برابر با $\frac{1}{c}$ است. هرچه $c$ به ۱ نزدیک‌تر باشد، الگوریتم بهینه‌تر است.
+
+</div>
+
+<div class="box-result">
+
+**مثال: توزیع بتا (Beta(3,2))**
+
+در این مثال می‌خواهیم توزیع بتا را با استفاده از توزیع پیشنهادی یکنواخت شبیه‌سازی کنیم.
+تابع هدف: $f_X(x) = 12x^2(1-x)$ برای $0 \le x \le 1$.
+تابع پیشنهادی: $f_Y(x) = 1$.
+ثابت بهینه: $c = 16/9$.
+
+کد زیر پیاده‌سازی دقیق این مثال است:
+
+```{r}
+f_X <- function(x) {
+  if (x >= 0 & x <= 1) {
+    return(12 * (x^2) * (1 - x))
+  } else {
+    return(0)
+  }
+}
+
+f_Y <- function(x) {
+  if (x >= 0 & x <= 1) {
+    return(1)
+  } else {
+    return(0)
+  }
+}
+
+C <- 16 / 9
+
+acbeta <- function(N) {
+  samples <- numeric(N)  
+  count <- 0             
+  b <- 0 
+  
+  while (count < N) {
+    b <- b + 1
+    
+    X_star <- runif(1, 0, 1)
+    U <- runif(1, 0, 1)
+    
+    ratio <- f_X(X_star) / C
+    
+    if (U <= ratio) {
+      count <- count + 1
+      samples[count] <- X_star
+    }
+  }
+  
+ 
+  efficiency <- N / b
+
+  
+  N / b
+  b
+  round(efficiency, 4)
+  round(1 / C, 4)
+  
+  return(samples)
+}
+
+acbeta(5)
+
+length(acbeta(5))
+```
+
+</div>
+
+</div>
+
+<div class="report-footer" style="text-align: center; margin-top: 50px; font-size: 0.8em; color: #777;">
+  پایان گزارش | روش‌های شبیه‌سازی آماری
+</div>
+```

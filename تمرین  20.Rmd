@@ -1,0 +1,510 @@
+---
+title: "مقایسه روش‌های برآورد پارامتر: گشتاوری و ماکسیمم درست‌نمایی"
+subtitle: "شبیه‌سازی و مقایسه کارایی برآوردگرها برای توزیع‌های پارتو و پواسون"
+author: "تحلیل آماری پیشرفته"
+date: "۱۴۰۴/۰۹/۲۴"
+output:
+  html_document:
+    css: "optimized-theme.css"
+    theme: default
+    highlight: kate
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    df_print: paged
+    lang: fa
+---
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.profile-container {
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: 40px;
+  animation: fade-up 0.8s ease-out;
+}
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+  padding: 10px 25px;
+  border-radius: 50px;
+  color: white !important;
+  text-decoration: none !important;
+  font-weight: bold;
+  font-family: sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-linkedin {
+  background: linear-gradient(45deg, #0077b5, #00a0dc);
+}
+.btn-github {
+  background: linear-gradient(45deg, #333, #555);
+}
+.profile-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  filter: brightness(1.1);
+}
+.profile-btn i {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+.box-info {
+  background-color: #e3f2fd;
+  border-right: 5px solid #2196f3;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 5px;
+}
+.box-result {
+  background-color: #e8f5e9;
+  border-right: 5px solid #4caf50;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 5px;
+}
+.box-warning {
+  background-color: #fff3e0;
+  border-right: 5px solid #ff9800;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 5px;
+}
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+}
+.report-footer {
+  text-align: center;
+  margin-top: 50px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 10px;
+  font-size: 1.1em;
+}
+</style>
+
+<div class="profile-container">
+  <a href="https://www.linkedin.com/in/amirali-satvati/" target="_blank" class="profile-btn btn-linkedin">
+    <i class="fab fa-linkedin"></i> LinkedIn
+  </a>
+  <a href="https://github.com/amiralisatvati" target="_blank" class="profile-btn btn-github">
+    <i class="fab fa-github"></i> GitHub
+  </a>
+</div>
+
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo = TRUE, digits = 3)
+library(ggplot2)
+library(dplyr)
+```
+
+
+<div class="report-header">
+  <div class="header-right"><strong>سیستم تحلیل برآوردگرهای آماری</strong></div>
+  <div class="header-left">شبیه‌سازی مونت کارلو</div>
+</div>
+
+<div class="main-content-wrapper">
+
+# مقدمه و چارچوب نظری
+
+برآورد پارامترها یکی از چالش‌های اساسی در استنباط آماری است. در این پروژه، دو روش اصلی برآورد را مقایسه می‌کنیم:
+
+- **روش گشتاوری (Method of Moments - MOM):** گشتاورهای نمونه را با گشتاورهای جامعه برابر می‌گیرد
+- **روش ماکسیمم درست‌نمایی (Maximum Likelihood Estimation - MLE):** احتمال مشاهده داده‌ها را بیشینه می‌کند
+
+<div class="box-info">
+<p><strong>هدف تحلیل:</strong></p>
+<p>در این تمرین، کارایی این دو روش را برای دو توزیع متفاوت (پارتو و پواسون) با استفاده از شبیه‌سازی مونت کارلو مقایسه می‌کنیم. معیارهای مقایسه شامل <strong>اریبی (Bias)</strong> و <strong>میانگین مربعات خطا (MSE)</strong> است.</p>
+</div>
+
+---
+
+# بخش اول: توزیع پارتو
+
+## تعریف توزیع و پارامترها
+
+توزیع پارتو با پارامتر شکل $\alpha$ (مجهول) و پارامتر مقیاس ثابت $x_m = 1$ دارای تابع چگالی احتمال زیر است:
+
+$$
+f(x; \alpha) = \begin{cases}
+\frac{\alpha}{x^{\alpha+1}} & x \geq 1 \\
+0 & x < 1
+\end{cases}
+$$
+
+تابع توزیع تجمعی (CDF):
+
+$$
+F(x) = 1 - \frac{1}{x^\alpha}, \quad x \geq 1
+$$
+
+<div class="box-info">
+<p><strong>کاربرد توزیع پارتو:</strong></p>
+<p>این توزیع برای مدل‌سازی داده‌های دم‌سنگین استفاده می‌شود، از جمله توزیع درآمد، اندازه شهرها، و قیمت سهام.</p>
+</div>
+
+## روش تبدیل معکوس برای شبیه‌سازی
+
+برای تولید داده‌های تصادفی از توزیع پارتو، از **روش تبدیل معکوس** (Inverse Transform Sampling) استفاده می‌کنیم.
+
+### اشتقاق فرمول
+
+با قرار دادن $u = F(x)$ و حل معادله برای $x$:
+
+$$
+u = 1 - \frac{1}{x^\alpha} \implies \frac{1}{x^\alpha} = 1 - u
+$$
+
+$$
+\implies x^\alpha = \frac{1}{1-u} \implies x = (1-u)^{-1/\alpha}
+$$
+
+از آنجا که $1-u$ نیز یکنواخت بین 0 و 1 است، می‌توان نوشت:
+
+$$
+x = u^{-1/\alpha}
+$$
+
+### تولید نمونه دستی
+
+با فرض $\alpha = 2$، پنج عدد تصادفی یکنواخت تولید و به داده‌های پارتو تبدیل می‌کنیم:
+
+| شماره | $u_i$ | محاسبه $x_i = u_i^{-1/2}$ | داده نهایی |
+|-------|-------|---------------------------|-----------|
+| 1 | 0.64 | $0.64^{-0.5}$ | 1.25 |
+| 2 | 0.25 | $0.25^{-0.5}$ | 2.00 |
+| 3 | 0.16 | $0.16^{-0.5}$ | 2.50 |
+| 4 | 0.81 | $0.81^{-0.5}$ | 1.11 |
+| 5 | 0.04 | $0.04^{-0.5}$ | 5.00 |
+
+**نمونه تصادفی شبیه‌سازی شده:** $\{1.25, 2.00, 2.50, 1.11, 5.00\}$
+
+## استخراج برآوردگر گشتاوری (MOM)
+
+برای توزیع پارتو با $x_m = 1$، امید ریاضی برابر است با:
+
+$$
+E[X] = \frac{\alpha}{\alpha - 1}, \quad \alpha > 1
+$$
+
+با برابر قرار دادن میانگین نمونه ($\bar{X}$) با میانگین نظری:
+
+$$
+\bar{X} = \frac{\alpha}{\alpha - 1}
+$$
+
+حل برای $\alpha$:
+
+$$
+\bar{X}(\alpha - 1) = \alpha \implies \bar{X}\alpha - \bar{X} = \alpha
+$$
+
+$$
+\implies \bar{X}\alpha - \alpha = \bar{X} \implies \alpha(\bar{X} - 1) = \bar{X}
+$$
+
+$$
+\implies \hat{\alpha}_{MOM} = \frac{\bar{X}}{\bar{X} - 1}
+$$
+
+## استخراج برآوردگر ماکسیمم درست‌نمایی (MLE)
+
+تابع درست‌نمایی برای نمونه $x_1, \ldots, x_n$:
+
+$$
+L(\alpha) = \prod_{i=1}^{n} \frac{\alpha}{x_i^{\alpha+1}} = \alpha^n \prod_{i=1}^{n} x_i^{-(\alpha+1)}
+$$
+
+لگاریتم درست‌نمایی:
+
+$$
+\ln L = n\ln(\alpha) - (\alpha+1)\sum_{i=1}^{n}\ln(x_i)
+$$
+
+مشتق نسبت به $\alpha$ و برابر صفر قرار دادن:
+
+$$
+\frac{d\ln L}{d\alpha} = \frac{n}{\alpha} - \sum_{i=1}^{n}\ln(x_i) = 0
+$$
+
+$$
+\implies \hat{\alpha}_{MLE} = \frac{n}{\sum_{i=1}^{n}\ln(x_i)}
+$$
+
+<div class="box-result">
+<p><strong>مقایسه فرمول‌ها:</strong></p>
+<ul>
+<li><strong>MOM:</strong> $\hat{\alpha}_{MOM} = \frac{\bar{X}}{\bar{X} - 1}$ — فقط به میانگین وابسته است</li>
+<li><strong>MLE:</strong> $\hat{\alpha}_{MLE} = \frac{n}{\sum\ln(x_i)}$ — از اطلاعات لگاریتمی استفاده می‌کند</li>
+</ul>
+</div>
+
+## شبیه‌سازی مونت کارلو برای پارتو
+
+set.seed(123)
+n <- 20
+alpha <- 2
+xm <- 1
+```{r}
+set.seed(123)
+n <- 20
+alpha <- 2
+xm <- 1
+
+mom <- numeric(100)
+mle <- numeric(100)
+
+for (i in 1:100) {
+  u <- runif(n)
+  x <- xm / (u^(1/alpha))
+  
+  x_bar <- mean(x)
+  mom[i] <- x_bar / (x_bar - xm)
+  
+  log_sum <- sum(log(x / xm))
+  mle[i] <- n / log_sum
+}
+```
+
+## 1. محاسبه اریبی (Bias)
+```{r}
+ mean(mom) - alpha
+ mean(mle) - alpha
+
+```
+
+
+## 2. محاسبه میانگین مربعات خطا (MSE)
+```{r}
+ mean((mom - alpha)^2)
+ mean((mle - alpha)^2)
+```
+
+
+
+
+## نمودار مقایسه‌ای پارتو
+
+رسم نمودار جعبه‌ای برای مقایسه چشمی
+
+```{r}
+
+boxplot(mom, mle, names=c("MOM", "MLE"), col = c("lightblue", "lightgreen"),
+main="مقایسه برآوردگرها برای توزیع پارتو",
+ylab="مقدار برآورد α")
+abline(h = alpha, col = "red", lty = 2, lwd = 2)
+legend("topright", legend="α واقعی = 2", col="red", lty=2, lwd=2)
+```
+
+
+<div class="box-result">
+<p><strong>تحلیل نتایج پارتو:</strong></p>
+<ul>
+<li><strong>اریبی:</strong> MLE اریبی کمتری دارد (~0.069) در مقایسه با MOM (~0.164)</li>
+<li><strong>MSE:</strong> MLE با MSE کمتر نسبت به MOM دقیق‌تر است</li>
+<li><strong>پراکندگی:</strong> هر دو روش واریانس مشابهی دارند اما مرکز توزیع MLE به مقدار واقعی نزدیک‌تر است</li>
+<li><strong>نتیجه:</strong> برای توزیع پارتو، MLE روش برتر است</li>
+</ul>
+</div>
+
+---
+
+# بخش دوم: توزیع پواسون
+
+## تعریف و ویژگی‌های توزیع
+
+متغیر تصادفی $X$ با توزیع پواسون (نرخ $\lambda$) دارای تابع احتمال زیر است:
+
+$$
+P(X=x) = \frac{e^{-\lambda} \lambda^x}{x!}, \quad x = 0, 1, 2, \ldots
+$$
+
+**ویژگی کلیدی:** پارامتر $\lambda$ هم میانگین و هم واریانس توزیع است:
+
+$$
+E[X] = \text{Var}(X) = \lambda
+$$
+
+<div class="box-info">
+<p><strong>کاربرد توزیع پواسون:</strong></p>
+<p>مدل‌سازی تعداد رخدادها در بازه زمانی ثابت: ورود مشتریان، تماس‌های تلفنی، خرابی دستگاه، و غیره.</p>
+</div>
+
+## استخراج برآوردگر گشتاوری (MOM)
+
+از آنجا که $E[X] = \lambda$، برآوردگر گشتاوری به سادگی میانگین نمونه است:
+
+$$
+\hat{\lambda}_{MOM} = \bar{X} = \frac{1}{n}\sum_{i=1}^{n}x_i
+$$
+
+## استخراج برآوردگر ماکسیمم درست‌نمایی (MLE)
+
+تابع درست‌نمایی:
+
+$$
+L(\lambda) = \prod_{i=1}^{n} \frac{e^{-\lambda} \lambda^{x_i}}{x_i!} = \frac{e^{-n\lambda} \lambda^{\sum x_i}}{\prod x_i!}
+$$
+
+لگاریتم درست‌نمایی:
+
+$$
+\ln L = -n\lambda + \left(\sum x_i\right) \ln(\lambda) - \ln\left(\prod x_i!\right)
+$$
+
+مشتق نسبت به $\lambda$:
+
+$$
+\frac{d\ln L}{d\lambda} = -n + \frac{\sum x_i}{\lambda} = 0
+$$
+
+$$
+\implies \hat{\lambda}_{MLE} = \frac{\sum x_i}{n} = \bar{X}
+$$
+
+<div class="box-warning">
+<p><strong>نتیجه مهم:</strong></p>
+<p>برای توزیع پواسون (و همچنین توزیع نرمال و دوجمله‌ای)، روش گشتاوری و ماکسیمم درست‌نمایی به <strong>فرمول یکسانی</strong> می‌رسند:</p>
+$$\hat{\lambda}_{MOM} = \hat{\lambda}_{MLE} = \bar{X}$$
+<p>این یعنی در شبیه‌سازی، عملکرد دو روش کاملاً یکسان خواهد بود.</p>
+</div>
+
+## مثال محاسباتی دستی
+
+با $\lambda = 4$ و نمونه $\{3, 5, 2, 6, 4\}$:
+
+$$
+\bar{X} = \frac{3+5+2+6+4}{5} = \frac{20}{5} = 4
+$$
+
+بنابراین:
+$$
+\hat{\lambda}_{MOM} = \hat{\lambda}_{MLE} = 4
+$$
+
+این برآورد دقیقاً با مقدار واقعی پارامتر برابر است (که البته تصادفی است).
+
+## شبیه‌سازی مونت کارلو برای پواسون
+```{r}
+
+
+n <- 30
+lambda <- 4
+
+mom <- numeric(100)
+mle <- numeric(100)
+
+for(i in 1:100){
+  x <- rpois(n, lambda)
+  
+  mom[i] <- mean(x)
+  mle[i] <- mean(x) 
+}
+```
+
+```{r}
+mean(mom) - lambda
+mean(mle) - lambda
+mean((mom - lambda)^2)
+mean((mle - lambda)^2)
+```
+
+
+## نمودار مقایسه‌ای پواسون
+
+رسم نمودار جعبه‌ای
+
+
+```{r}
+boxplot(mom, mle, names=c("MOM", "MLE"), col = c("orange", "orange"),
+        main="مقایسه برآوردگرها برای توزیع پواسون",
+        ylab="مقدار برآورد λ")
+
+abline(h = lambda, col = "red", lty = 2, lwd = 2)
+
+legend("topright", legend="λ واقعی = 4", col="red", lty=2, lwd=2)
+
+# خط زیر اصلاح شد: افزودن تابع text و بستن پرانتز
+text(x = 1.5, y = lambda + 0.4, labels = "توجه: دو جعبه کاملاً منطبق هستند", 
+     col = "darkblue", cex = 0.8)
+```
+
+
+
+<div class="box-result">
+<p><strong>تحلیل نتایج پواسون:</strong></p>
+<ul>
+<li><strong>همسانی کامل:</strong> هر دو روش عملکرد یکسانی دارند (اریبی و MSE برابر)</li>
+<li><strong>اریبی ناچیز:</strong> اریبی هر دو روش تقریباً صفر است</li>
+<li><strong>MSE پایین:</strong> MSE نشان‌دهنده دقت بالا با n=30 است</li>
+<li><strong>نتیجه:</strong> برای پواسون، انتخاب روش اهمیتی ندارد</li>
+</ul>
+</div>
+
+---
+
+# نتیجه‌گیری نهایی
+
+## مقایسه جامع دو توزیع
+
+<div class="box-result">
+<p><strong>خلاصه دستاوردها:</strong></p>
+
+<ol>
+<li><strong>توزیع پارتو:</strong> MLE برتری قابل توجهی دارد با اریبی و MSE کمتر. دلیل: استفاده بهینه از اطلاعات لگاریتمی و مقاومت بهتر در برابر دم‌سنگینی</li>
+
+<li><strong>توزیع پواسون:</strong> هیچ تفاوتی بین دو روش وجود ندارد زیرا هر دو به فرمول یکسانی (میانگین نمونه) می‌رسند</li>
+
+<li><strong>انتخاب روش:</strong> برای توزیع‌های پیچیده (مانند پارتو)، MLE معمولاً کارآمدتر است، اگرچه محاسباتی سنگین‌تر است</li>
+
+<li><strong>تأیید تئوری:</strong> نتایج شبیه‌سازی مونت کارلو کاملاً با پیش‌بینی‌های تئوری مطابقت دارد</li>
+</ol>
+
+<hr style="border-top: 1px dashed #4caf50; margin: 15px 0;">
+
+<p><strong>کاربردهای عملی:</strong></p>
+<ul>
+<li><strong>مالی:</strong> تحلیل داده‌های مالی با توزیع پارتو (درآمدها، ریسک)</li>
+<li><strong>صنعتی:</strong> تحلیل صف و تعداد خرابی‌ها (پواسون)</li>
+<li><strong>بیمه:</strong> مدل‌سازی فراوانی خسارت (پواسون) و شدت خسارت (پارتو)</li>
+<li><strong>رگرسیون:</strong> برآورد پارامترها در مدل‌های خطی تعمیم‌یافته</li>
+</ul>
+</div>
+
+## تحلیل نظری
+
+<div class="box-info">
+<p><strong>چرا MLE برای پارتو بهتر است؟</strong></p>
+<ol>
+<li><strong>استفاده کامل از اطلاعات:</strong> MLE از تابع درست‌نمایی کامل استفاده می‌کند، در حالی که MOM فقط از گشتاور اول بهره می‌برد</li>
+<li><strong>مقاومت به دم‌سنگینی:</strong> در توزیع پارتو، میانگین حساس به مقادیر افراطی است، اما MLE با لگاریتم این حساسیت را کاهش می‌دهد</li>
+<li><strong>کارایی مجانبی:</strong> طبق قضیه کرامر-رائو، MLE در نمونه‌های بزرگ به کارآمدترین برآوردگر میل می‌کند</li>
+</ol>
+</div>
+
+<div class="box-warning">
+<p><strong>چرا در پواسون تفاوتی نیست؟</strong></p>
+<p>توزیع پواسون از خانواده توزیع‌های نمایی است و دارای <strong>آماره کافی</strong> (Sufficient Statistic) ساده‌ای به نام $\sum X_i$ است. در چنین مواردی، هر روش معقول برآوردی به همان آماره کافی می‌رسد و عملکرد یکسانی دارند.</p>
+</div>
+
+</div>
+
+<div class="report-footer">
+  <i class="fas fa-chart-line"></i> تهیه شده توسط امیرعلی سطوتی | پاییز ۱۴۰۴
+  <br>
+  <small>سیستم تحلیل آماری پیشرفته - شبیه‌سازی مونت کارلو</small>
+</div>

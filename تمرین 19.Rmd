@@ -1,0 +1,230 @@
+---
+title: "شبیه‌سازی پیشرفته بردارهای نرمال چندمتغیره"
+subtitle: "تحلیل شرطی و پیش‌بینی سری‌های زمانی با رویکرد ماتریسی"
+author: "امیرعلی سطوتی"
+date: "۱۴۰۴/۰۹/۲۴"
+output:
+  html_document:
+    css: "optimized-theme.css"
+    theme: default
+    highlight: kate
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    df_print: paged
+    lang: fa
+---
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.profile-container {
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: 40px;
+  animation: fade-up 0.8s ease-out;
+}
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+  padding: 10px 25px;
+  border-radius: 50px;
+  color: white !important; /* اجبار رنگ سفید */
+  text-decoration: none !important;
+  font-weight: bold;
+  font-family: sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-linkedin {
+  background: linear-gradient(45deg, #0077b5, #00a0dc);
+}
+.btn-github {
+  background: linear-gradient(45deg, #333, #555);
+}
+.profile-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  filter: brightness(1.1);
+}
+.profile-btn i {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+/* استایل‌های اختصاصی گزارش */
+.box-info {
+  background-color: #e3f2fd;
+  border-right: 5px solid #2196f3;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 5px;
+}
+.box-result {
+  background-color: #e8f5e9;
+  border-right: 5px solid #4caf50;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 5px;
+}
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+}
+</style>
+
+<div class="profile-container">
+  <a href="https://www.linkedin.com/in/amirali-satvati/" target="_blank" class="profile-btn btn-linkedin">
+    <i class="fab fa-linkedin"></i> LinkedIn
+  </a>
+  <a href="https://github.com/amiralisatvati" target="_blank" class="profile-btn btn-github">
+    <i class="fab fa-github"></i> GitHub
+  </a>
+</div>
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, digits = 3)
+library(ggplot2)
+library(dplyr)
+library(MASS)
+```
+<div class="report-header"><div class="header-right"><strong>سیستم تحلیل آماری چندمتغیره</strong></div><div class="header-left">شبیه‌سازی استوکستیک</div></div><div class="main-content-wrapper">تعریف مسئله و بارگذاری پارامترهادر این پروژه، قصد داریم رفتار یک سیستم سه متغیره $(X_1, X_2, X_3)$ را که از توزیع نرمال چندمتغیره پیروی می‌کند، شبیه‌سازی کنیم. چالش اصلی زمانی مطرح می‌شود که مقدار متغیر اول ($X_1$) مشاهده شده است و می‌خواهیم با استفاده از احتمال شرطی و قانون زنجیره‌ای، مقادیر آینده ($X_2, X_3$) را پیش‌بینی کنیم.<div class="box-info"><p><strong>سناریوی مسئله:</strong>فرض کنید ماتریس کوواریانس سیستم به صورت زیر است که همبستگی بالای متغیرها (به‌ویژه بین همسایه‌ها) را نشان می‌دهد. میانگین اولیه تمام متغیرها صفر است، اما مشاهده می‌کنیم که $X_1 = 2$ رخ داده است.</p></div>تعریف ماتریس کوواریانس و مشاهداتتکه‌کد# ماتریس کوواریانس اصلی (Sigma)
+```{r}
+Sigma <- matrix(c(1.0, 0.8, 0.6,
+                  0.8, 1.0, 0.8,
+                  0.6, 0.8, 1.0), 
+                nrow=3, byrow=TRUE)
+
+# میانگین‌های اولیه
+Mu <- c(0, 0, 0)
+
+# پارامتر مشاهده شده (Observation)
+x1_observed <- 2
+
+print(Sigma)
+```
+
+
+محاسبات ماتریسی: به‌روزرسانی باورهاقبل از شبیه‌سازی، باید توزیع شرطی $(X_2, X_3 | X_1=2)$ را محاسبه کنیم. این کار با استفاده از افراز ماتریس (Partitioning) انجام می‌شود.$$\mu_{new} = \mu_b + \Sigma_{21}\Sigma_{11}^{-1}(x_a - \mu_a)$$$$\Sigma_{new} = \Sigma_{22} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12}$$تکه‌کد# استخراج زیرماتریس‌ها
+```{r}
+Sigma_11 <- matrix(Sigma[1,1]) 
+Sigma_12 <- Sigma[1, 2:3]                    
+Sigma_21 <- matrix(Sigma[2:3, 1])            
+Sigma_22 <- Sigma[2:3, 2:3]                  
+
+# محاسبه میانگین‌های شرطی (به‌روزرسانی شده)
+# با توجه به اینکه Mu صفر است، فرمول ساده می‌شود
+mu_new <- Sigma_21 %*% (1/Sigma_11) * (x1_observed - Mu[1])
+
+# محاسبه کوواریانس شرطی (کاهش عدم قطعیت)
+Sigma_new <- Sigma_22 - (Sigma_21 %*% (1/Sigma_11) %*% t(Sigma_12))
+
+# نام‌گذاری برای خوانایی
+rownames(mu_new) <- c("X2", "X3")
+rownames(Sigma_new) <- c("X2", "X3")
+colnames(Sigma_new) <- c("X2", "X3")
+print("میانگین‌های جدید (Updated Means):")
+print(t(mu_new))
+print("ماتریس کوواریانس جدید (Updated Covariance):")
+print(Sigma_new)
+```
+
+
+<div class="box-result"><p><strong>تفسیر نتایج محاسباتی:</strong></p><ul><li><strong>تغییر میانگین:</strong> مشاهده مقدار $X_1=2$ باعث شد انتظار ما از $X_2$ به <strong>۱.۶</strong> و از $X_3$ به <strong>۱.۲</strong> افزایش یابد. این به دلیل همبستگی مثبت است.</li><li><strong>کاهش واریانس:</strong> واریانس $X_2$ از ۱.۰ به <strong>۰.۳۶</strong> کاهش یافت. این یعنی مشاهده $X_1$ اطلاعات زیادی درباره $X_2$ به ما داده است و عدم قطعیت به شدت کم شده است.</li>
+</ul></div>شبیه‌سازی زنجیره‌ای (Chain Rule Simulation)حال که پارامترهای توزیع شرطی $(X_2, X_3)$ را داریم، از روش زنجیره‌ای برای تولید نمونه تصادفی استفاده می‌کنیم.این روش دقیقاً همان فرآیندی است که توابع کتابخانه‌ای انجام می‌دهند، اما ما آن را به صورت دستی و گام‌به‌گام (Manual Implementation) پیاده‌سازی می‌کنیم.استخراج پارامترهای دستی از ماتریس جدیدتکه‌کد# میانگین‌های شرطی
+
+```{r}
+mu_2 <- mu_new[1] # 1.6
+mu_3 <- mu_new[2] # 1.2
+```
+
+
+
+# واریانس و کوواریانس شرطی از ماتریس Sigma_new
+```{r}
+var_2 <- Sigma_new[1,1]  # 0.36
+var_3 <- Sigma_new[2,2]  # 0.64
+cov_23 <- Sigma_new[1,2] # 0.32
+```
+
+
+اجرای الگوریتم شبیه‌سازیدر اینجا ابتدا $X_2$ را تولید کرده و سپس $X_3$ را بر اساس مقدار تولید شده‌ی $X_2$ شبیه‌سازی می‌کنیم.تکه‌کدset.seed(123) # برای تکرارپذیری نتایج
+
+# گام ۱: شبیه‌سازی X2 از توزیع حاشیه‌ای جدید
+# نکته: rnorm انحراف معیار می‌گیرد (جذر واریانس)
+```{r}
+x2 <- rnorm(1, mean=mu_2, sd=sqrt(var_2))
+
+# گام ۲: شبیه‌سازی X3 به شرط X2 (زنجیره دوم)
+# محاسبه پارامترهای شرطی لحظه‌ای برای X3
+
+# ضریب رگرسیون X3 روی X2 در فضای جدید (beta)
+beta <- cov_23 / var_2 
+
+# میانگین شرطی X3 با دانستن X2 تولید شده
+cond_mean_3 <- mu_3 + beta * (x2 - mu_2)
+
+# واریانس شرطی X3 (مقدار باقیمانده)
+cond_var_3 <- var_3 * (1 - (cov_23^2 / (var_2 * var_3)))
+
+# تولید نهایی X3
+x3 <- rnorm(1, mean=cond_mean_3, sd=sqrt(cond_var_3))
+
+# تجمیع نتایج در یک بردار
+result_vector <- c(x1_observed, x2, x3)
+```
+
+names(result_vector) <- c("X1 (Observed)", "X2 (Simulated)", "X3 (Simulated)")
+<div class="box-result"><p><strong>نتیجه یک بار اجرای شبیه‌سازی:</strong></p>تکه‌کدprint(result_vector)
+<p>همانطور که می‌بینید، مقدار تولید شده برای $X_2$ (حدود ۱.۲۶) و $X_3$ (حدود ۰.۸۸) حول میانگین‌های محاسبه شده (۱.۶ و ۱.۲) نوسان دارند، اما دقیقاً برابر آن‌ها نیستند که نشان‌دهنده ماهیت تصادفی فرآیند است.</p></div>تحلیل تصویری و اعتبارسنجیبرای اینکه رفتار سیستم را بهتر درک کنیم، شبیه‌سازی فوق را ۱۰۰۰ بار تکرار می‌کنیم تا توزیع احتمالاتی $X_2$ و $X_3$ را مشاهده کنیم.تکه‌کد# شبیه‌سازی انبوه برای تولید نمودار
+```{r}
+n_sim <- 1000
+sim_data <- data.frame(X2 = numeric(n_sim), X3 = numeric(n_sim))
+
+for(i in 1:n_sim) {
+  # تکرار همان الگوریتم بالا
+  x2_loop <- rnorm(1, mean=mu_2, sd=sqrt(var_2))
+  beta_loop <- cov_23 / var_2
+  mean_3_loop <- mu_3 + beta_loop * (x2_loop - mu_2)
+  var_3_loop <- var_3 * (1 - (cov_23^2 / (var_2 * var_3)))
+  x3_loop <- rnorm(1, mean=mean_3_loop, sd=sqrt(var_3_loop))
+  
+  sim_data$X2[i] <- x2_loop
+  sim_data$X3[i] <- x3_loop
+}
+
+```
+
+# رسم نمودار توزیع توأم
+```{r}
+ggplot(sim_data, aes(x=X2, y=X3)) +
+  # نقطه مرکزی تئوری
+  annotate("point", x=1.6, y=1.2, color="red", size=5, shape=18) +
+  geom_density_2d(color = "blue", size=1) +
+  geom_point(alpha=0.3, color="darkcyan") +
+  geom_vline(xintercept = 1.6, linetype="dashed", color="red") +
+  geom_hline(yintercept = 1.2, linetype="dashed", color="red") +
+  labs(
+    title = "فضای نمونه‌سازی شده برای (X2, X3) با شرط X1=2",
+    subtitle = "نقطه قرمز: میانگین تئوری محاسبه شده | خطوط آبی: منحنی‌های چگالی",
+    x = "مقدار X2 (شبیه‌سازی شده)",
+    y = "مقدار X3 (شبیه‌سازی شده)"
+  ) +
+  theme_minimal()
+```
+
+<div class="box-info"><p><strong>تحلیل نمودار:</strong>ابر نقاط نشان می‌دهد که توزیع جدید همچنان بیضی‌گون (نرمال) است. مرکز ثقل داده‌ها دقیقاً روی نقطه $(1.6, 1.2)$ قرار گرفته است. همچنین کشیدگی بیضی در راستای قطر اصلی، نشان‌دهنده همبستگی مثبت باقی‌مانده بین $X_2$ و $X_3$ است.</p></div>نتیجه‌گیری نهایی<div class="box-result"><p><strong>خلاصه دستاوردهای شبیه‌سازی:</strong></p><ol><li><strong>قدرت روش شرطی:</strong>ما توانستیم بدون استفاده از توابع آماده‌ی جعبه‌سیاه (Black-box)، صرفاً با استفاده از قوانین جبر خطی و تولید اعداد تصادفی تک‌متغیره، یک سیستم پیچیده چندمتغیره وابسته را شبیه‌سازی کنیم.</li><li>
+  <strong>انتشار اطلاعات (Information Propagation):</strong>
+  مشاهده کردیم که چگونه دیدن مقدار $X_1$ نه تنها میانگین همسایه نزدیکش ($X_2$) را تغییر داد، بلکه اثر آن تا متغیر دورتر ($X_3$) نیز منتشر شد، اگرچه شدت اثر (همبستگی) کمتر بود.
+</li>
+
+<li>
+  <strong>کدنویسی منعطف:</strong>
+  الگوریتم پیاده‌سازی شده (محاسبه `beta` و پارامترهای لحظه‌ای) پایه‌ای برای روش‌های پیشرفته‌تر مانند <strong>Gibbs Sampling</strong> در آمار بیزین است.
+</li>
+</ol><hr style="border-top: 1px dashed #10b981; margin: 15px 0;"><p><strong>کاربرد عملی:</strong></p><p>این روش در مهندسی مالی (برای پیش‌بینی قیمت دارایی‌های وابسته)، هواشناسی (پیش‌بینی وضعیت نقاط جغرافیایی مجاور) و پردازش سیگنال (فیلتر کالمن) کاربرد حیاتی دارد.</p></div><div class="report-footer">تهیه شده توسط امیرعلی سطوتی | پاییز ۱۴۰۴</div>

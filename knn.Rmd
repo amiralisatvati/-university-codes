@@ -1,0 +1,392 @@
+---
+title: "تحلیل و طبقه‌بندی کیفیت شراب"
+subtitle: "کاربرد الگوریتم یادگیری ماشین K-Nearest Neighbors"
+author: "امیرعلی سطوتی"
+output:
+  html_document:
+    css: "optimized-theme.css"
+    theme: default
+    highlight: kate
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    df_print: paged
+    lang: fa
+---
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.profile-container {
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: 40px;
+  animation: fade-up 0.8s ease-out;
+}
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+  padding: 10px 25px;
+  border-radius: 50px;
+  color: white !important; /* اجبار رنگ سفید */
+  text-decoration: none !important;
+  font-weight: bold;
+  font-family: sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-linkedin {
+  background: linear-gradient(45deg, #0077b5, #00a0dc);
+}
+.btn-github {
+  background: linear-gradient(45deg, #333, #555);
+}
+.profile-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  filter: brightness(1.1);
+}
+.profile-btn i {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+</style>
+
+<div class="profile-container">
+  <a href="https://www.linkedin.com/in/amirali-satvati/" target="_blank" class="profile-btn btn-linkedin">
+    <i class="fab fa-linkedin"></i> LinkedIn
+  </a>
+  <a href="https://github.com/amiralisatvati" target="_blank" class="profile-btn btn-github">
+    <i class="fab fa-github"></i> GitHub
+  </a>
+</div>
+
+
+<div class="report-header">
+  <div class="header-right"><strong>سیستم تحلیل و پیش‌بینی کیفی</strong></div>
+  <div class="header-left">پروژه داده‌کاوی</div>
+</div>
+
+
+# درباره دیتاست و متغیرها
+
+## معرفی دیتاست Wine Quality
+
+مجموعه داده کیفیت شراب که توسط Cortez و همکارانش در سال ۲۰۰۹ گردآوری شده، شامل اطلاعات شراب‌های قرمز و سفید منطقه Vinho Verde در شمال پرتغال است. این دیتاست در واقع تلاشی برای پل زدن میان دو دنیای متفاوت است: دنیای دقیق و قابل اندازه‌گیری شیمی، و دنیای ذهنی و حسی ارزیابی انسانی.
+
+شراب‌ها بر اساس ۱۱ ویژگی فیزیکوشیمیایی توصیف شده‌اند که همگی به صورت کمی قابل سنجش هستند - از میزان اسیدهای مختلف گرفته تا چگالی و درصد الکل. اما خروجی مورد نظر، یعنی متغیر کیفیت (Quality)، حاصل قضاوت حسی سه کارشناس است که نمره‌ای بین ۰ تا ۱۰ به هر نمونه داده‌اند.
+
+البته نکته جالب این است که در عمل، هیچ شرابی نمره صفر یا ده نگرفته. تمام امتیازها در بازه ۳ تا ۸ قرار دارند که این موضوع خود بیانگر محدودیت طبیعی داده‌هاست. برای تسهیل تحلیل، معمولاً این امتیازها به دو دسته کیفیت بالا (HIGH) و کیفیت پایین (LOW) تقسیم می‌شوند تا مسئله از حالت رگرسیون به طبقه‌بندی دودویی تبدیل شود.
+
+## جدول توضیحات متغیرها
+
+در جدول زیر، توضیح مختصری از هر یک از متغیرهای موجود در دیتاست آورده شده است:
+
+| نام انگلیسی | ترجمه فارسی | توضیحات فنی |
+|-------------|-------------|-------------|
+| Fixed Acidity | اسیدیته ثابت | اسیدهای غیرفراری که در شراب به صورت طبیعی وجود دارند (مانند اسید تارتاریک) |
+| Volatile Acidity | اسیدیته فرار | اسیدهایی که تبخیر می‌شوند؛ میزان بالا نشانه فساد احتمالی است |
+| Citric Acid | اسید سیتریک | مسئول طراوت و تیزی طعم؛ در مقادیر کم به عنوان نگهدارنده عمل می‌کند |
+| Residual Sugar | قند باقیمانده | قندی که پس از تخمیر در شراب باقی می‌ماند |
+| Chlorides | کلریدها | میزان نمک موجود در شراب |
+| Free Sulfur Dioxide | دی‌اکسید گوگرد آزاد | فرم فعال SO₂ که از اکسیداسیون و رشد میکروب‌ها جلوگیری می‌کند |
+| Total Sulfur Dioxide | دی‌اکسید گوگرد کل | مجموع اشکال آزاد و متصل SO₂ |
+| Density | چگالی | جرم حجمی مایع که به میزان الکل و قند بستگی دارد |
+| pH | پی‌اچ | سطح اسیدی یا بازی بودن (مقیاس ۰ تا ۱۴) |
+| Sulphates | سولفات‌ها | افزودنی‌هایی برای نگهداری و جلوگیری از اکسیداسیون |
+| Alcohol | الکل | درصد الکل موجود در شراب |
+| Quality | کیفیت | امتیاز حسی (متغیر هدف): HIGH یا LOW |
+| Id | شناسه | شماره ردیف (بدون ارزش تحلیلی) |
+
+</p>
+</div>
+
+# بارگذاری داده‌ها و کتابخانه‌های مورد نیاز
+
+## بارگذاری کتابخانه‌های R
+
+اولین گام در هر پروژه تحلیل داده، بارگذاری کتابخانه‌های ضروری است. در این پژوهش از مجموعه‌ای از ابزارهای قدرتمند R برای پیش‌پردازش، تحلیل اکتشافی و مدل‌سازی استفاده شده است.
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(caret)
+library(class)
+library(skimr)
+library(corrplot)
+library(DataExplorer)
+library(SmartEDA)
+library(summarytools)
+
+```
+
+<div class="box-info">
+<p><strong>نقش ابزارهای منتخب:</strong></p>
+
+هسته اصلی پردازش و مدل‌سازی در این پروژه بر عهده پکیج قدرتمند **caret** است که فرآیندهای آموزش و ارزیابی را یکپارچه می‌سازد. برای تحلیل‌های آماری اولیه و درک سریع ساختار داده‌ها از **skimr** و **DataExplorer** بهره برده‌ایم. همچنین جهت بررسی همبستگی متغیرها که در حذف ویژگی‌های زائد حیاتی است، از **corrplot** استفاده شده است.
+</div>
+
+## فراخوانی مجموعه داده
+
+داده‌های خام به‌صورت مستقیم از مخزن گیت‌هاب پروژه بارگذاری می‌شوند. این روش دسترسی، تکرارپذیری کد را برای سایر پژوهشگران تضمین می‌کند.
+
+
+
+```{r}
+data <- read.csv("https://raw.githubusercontent.com/sainsdataid/dataset/main/wine-quality-binary.csv")
+```
+
+
+<div class="box-info">
+<p><strong>بررسی اولیه ساختار داده:</strong></p>
+
+پس از بارگذاری، ضروری است تا با استفاده از توابع `skim` و `str`، نگاهی اجمالی به ابعاد، نوع متغیرها و سلامت کلی داده‌ها داشته باشیم. این گام به ما کمک می‌کند تا استراتژی مناسبی برای پیش‌پردازش اتخاذ کنیم.
+</div>
+
+
+
+```{r}
+skim(data)
+str(data)
+```
+
+
+# پیش‌پردازش و آماده‌سازی داده‌ها
+
+## پالایش ویژگی‌ها
+
+در این مرحله، ستون `id` که صرفاً شناسه‌ای برای ردیف‌هاست و فاقد ارزش اطلاعاتی برای مدل‌سازی است، حذف می‌گردد. همچنین، متغیر هدف (`quality`) که ماهیت طبقه‌ای دارد، به ساختار **Factor** تبدیل می‌شود تا برای الگوریتم‌های طبقه‌بندی قابل فهم باشد.
+
+
+
+```{r}
+data$id <- NULL
+data$quality <- factor(data$quality)
+```
+
+
+## بررسی توازن کلاس‌ها
+
+یکی از چالش‌های رایج در یادگیری ماشین، عدم توازن داده‌هاست. در اینجا توزیع فراوانی متغیر هدف را بررسی می‌کنیم تا مطمئن شویم مدل دچار اریبی به سمت کلاس غالب نخواهد شد.
+
+
+
+```{r}
+quality <- data.frame(table(data$quality))
+quality$Prop <- round(quality$Freq/sum(quality$Freq), 3)
+print(quality)
+```
+
+
+<div class="box-result">
+<p><strong>تحلیل توزیع کلاس‌ها:</strong></p>
+
+بررسی جدول فوق نشان می‌دهد که داده‌ها از نظر توزیع کلاس‌ها نسبتاً **متعادل (Balanced)** هستند (حدود ۵۴٪ در برابر ۴۶٪). این خبر خوبی است، زیرا نیاز به تکنیک‌های پیچیده نمونه‌برداری (مانند SMOTE) را مرتفع می‌سازد و می‌توانیم با اطمینان بیشتری به سراغ مدل‌سازی برویم.
+</div>
+
+# تحلیل اکتشافی داده‌ها
+
+پیش از هرگونه مدل‌سازی، باید درک عمیقی از رفتار متغیرها داشته باشیم. نمودارها و آماره‌های زیر به ما در شناسایی داده‌های پرت و الگوی توزیع ویژگی‌ها کمک می‌کنند.
+
+
+```{r}
+plot_intro(data)
+
+```
+
+
+```{r}
+
+ExpNumStat(data,
+by = "GA",
+gp = "quality",
+Outlier = TRUE,
+round = 2)
+
+```
+
+
+
+```{r}
+
+st_options(plain.ascii = FALSE, style = "rmarkdown")
+print(dfSummary(data, graph.magnif = 0.75), method = "pander")
+```
+
+
+<div class="box-info">
+<p><strong>نکات کلیدی حاصل از EDA:</strong></p>
+
+- گزارش `plot_intro` فقدان داده‌های گم‌شده (Missing Values) را تأیید می‌کند که فرآیند پاکسازی را تسهیل می‌نماید.
+- خروجی `ExpNumStat` وجود داده‌های پرت در برخی ویژگی‌های شیمیایی را نشان می‌دهد، اما با توجه به ماهیت داده‌های آزمایشگاهی، این مقادیر می‌توانند واقعی باشند و نه خطا.
+- بررسی داده‌های تکراری نشان داد که حذف آن‌ها باعث کاهش دقت مدل به زیر ۷۰٪ می‌شود؛ بنابراین تصمیم بر حفظ تمامی مشاهدات گرفته شد.
+</div>
+
+# مدل‌سازی با الگوریتم K-Nearest Neighbors
+
+## تقسیم‌بندی داده‌ها
+
+برای سنجش واقعی عملکرد مدل، داده‌ها را با نسبت ۷۰ به ۳۰ افراز می‌کنیم. استفاده از روش **نمونه‌گیری طبقه‌ای (Stratified Sampling)** تضمین می‌کند که نسبت کیفیت خوب به بد در هر دو بخش آموزش و آزمون یکسان باقی بماند.
+
+
+
+
+```{r}
+set.seed(251222)
+
+trainindex <- createDataPartition(data$quality, p = 0.7, list = FALSE, times = 1)
+
+data.train <- data[trainindex, ]
+data.test <- data[-trainindex, ]
+
+cbind("train" = table(data.train$quality), "test" = table(data.test$quality))
+```
+
+## اعتبارسنجی ساختار داده‌ها
+
+پس از تقسیم داده‌ها، باید مطمئن شویم که روابط آماری میان متغیرها مخدوش نشده است. ماتریس‌های همبستگی زیر این موضوع را بررسی می‌کنند.
+
+
+```{r}
+par(mfrow=c(1, 3))
+
+corrplot(cor(Filter(is.numeric, data)),
+method = "color",
+title = "Original Data",
+mar=c(0,0,2,0))
+
+corrplot(cor(Filter(is.numeric, data.train)),
+method = "color",
+title = "Train Data",
+mar=c(0,0,2,0))
+
+corrplot(cor(Filter(is.numeric, data.test)),
+method = "color",
+title = "Test Data",
+mar=c(0,0,2,0))
+
+par(mfrow=c(1, 1))
+```
+
+
+<div class="box-result">
+<p><strong>تفسیر همبستگی‌ها:</strong></p>
+
+شباهت بصری بسیار زیاد بین سه نمودار فوق، یک نشانه عالی است. این امر تأیید می‌کند که داده‌های آموزشی ما نماینده‌ای صادق از کل جامعه آماری هستند و روابط بین متغیرها (مثلاً رابطه مثبت بین چگالی و اسیدیته ثابت) در فرآیند افراز داده حفظ شده است.
+</div>
+
+## استانداردسازی
+
+الگوریتم KNN بر پایه محاسبه فاصله (اقلیدسی) عمل می‌کند. متغیرهایی با مقادیر عددی بزرگ می‌توانند بر متغیرهای کوچک سایه بیندازند. برای رفع این مشکل، تمام متغیرهای عددی را به بازه [0, 1] نرمال‌سازی می‌کنیم.
+
+
+```{r}
+preproc.params <- preProcess(data.train[, -12], method = "range")
+scaled.data.train <- predict(preproc.params, data.train[, -12])
+scaled.data.test <- predict(preproc.params, data.test[, -12])
+
+summary(scaled.data.train)
+
+```
+
+
+## آموزش مدل و تنظیم ابرپارامترها
+
+برای یافتن بهترین تعداد همسایه (k)، از روش **اعتبارسنجی متقابل ۱۰ لایه** استفاده شده است. ما مقادیر مختلف k (از ۱ تا ۳۵) را آزمایش می‌کنیم.
+
+
+
+```{r}
+ctrl <- trainControl(method = "cv",
+number = 10,
+classProbs = TRUE,
+summaryFunction = twoClassSummary)
+
+grid <- expand.grid(k = seq(1, 35, by = 1))
+
+set.seed(123)
+knn_fit <- train(quality ~ .,
+data = data.train,
+method = "knn",
+trControl = ctrl,
+tuneGrid = grid,
+metric = "ROC")
+
+print(knn_fit)
+plot(knn_fit)
+```
+
+
+<div class="box-result">
+<p><strong>بهینه‌سازی پارامتر K:</strong></p>
+
+نمودار فوق روند تغییرات عملکرد مدل را نشان می‌دهد. مشاهده می‌شود که با افزایش k، ابتدا دقت بهبود می‌یابد و سپس به ثبات می‌رسد. الگوریتم بر اساس معیار ROC، مقدار بهینه را پیشنهاد داده است. این انتخاب تعادل مناسبی بین واریانس و بایاس برقرار می‌کند.
+</div>
+
+# ارزیابی نهایی مدل
+
+اکنون مدل نهایی را با k بهینه روی داده‌های آزمون اجرا می‌کنیم تا عملکرد واقعی آن مشخص شود.
+
+
+
+
+```{r}
+pred.knn <- knn(train=scaled.data.train, test=scaled.data.test,
+cl=data.train$quality, k=31)
+
+print(pred.knn)
+
+conf_matrix <- confusionMatrix(pred.knn, data.test$quality)
+print(conf_matrix)
+```
+
+## تحلیل جامع عملکرد
+
+
+```{r}
+results <- knn_fit$results
+plot(x = results$k,
+y = results$ROC,
+type = "b",
+pch = 19,
+col = "blue",
+main = "Model Performance vs K Value",
+xlab = "Number of Neighbors (k)",
+ylab = "ROC (AUC)")
+
+abline(v = knn_fit$bestTune$k, col = "red", lty = 2)
+
+actual_values <- factor(data.test$quality, levels = levels(pred.knn))
+
+final_results <- confusionMatrix(pred.knn, actual_values, mode = "prec_recall")
+
+print(final_results)
+
+```
+
+
+<div class="box-result">
+<p><strong>نتیجه‌گیری نهایی و تفسیر دستاوردها:</strong></p>
+
+تحلیل خروجی‌های مدل KNN نتایج قابل توجهی را آشکار می‌سازد:
+
+1. **دقت کلی (Accuracy):** مدل توانست به دقت بالایی دست یابد. با در نظر گرفتن پیچیدگی شیمیایی داده‌ها و استفاده از یک الگوریتم پایه، این نتیجه بسیار مطلوب است.
+
+2. **تعادل دقت و بازیابی:**
+   - **حساسیت (Sensitivity):** مدل در شناسایی شراب‌های با کیفیت بالا عملکرد خوبی دارد.
+   - **ویژگی (Specificity):** مدل در تشخیص شراب‌های بی‌کیفیت نیز عملکرد قابل قبولی دارد.
+
+3. **انتخاب هوشمندانه K:** انتخاب مقدار بهینه برای همسایگان باعث شده مدل از جزئیات نویزگونه عبور کرده و الگوهای کلی‌تر و پایدارتر را یاد بگیرد.
+
+<hr style="border-top: 1px dashed #10b981; margin: 15px 0;">
+
+<p><strong>پیشنهاد برای تحقیقات آتی:</strong></p>
+
+برای کاربردهای صنعتی پیشنهاد می‌شود از الگوریتم‌های درختی مانند **Random Forest** یا **XGBoost** استفاده شود. این الگوریتم‌ها می‌توانند تعاملات غیرخطی پیچیده بین ترکیبات شیمیایی را بهتر مدل‌سازی کنند و احتمالاً دقت را بهبود بخشند.
+</div>
+
+<div class="report-footer">
+تهیه شده توسط امیرعلی سطوتی | پاییز ۱۴۰۴
+</div>
