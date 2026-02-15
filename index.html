@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کدهای دانشگاهی | Amir Ali Satvati</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin: 40px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .category {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .category h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .file-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .file-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .file-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .file-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .file-links a {
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-view {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-view:hover {
+            background: #45a049;
+        }
+        .btn-code {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-code:hover {
+            background: #0b7dda;
+        }
+        .btn-rmd {
+            background: #ff9800;
+            color: white;
+        }
+        .btn-rmd:hover {
+            background: #e68900;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 کدهای دانشگاهی</h1>
+        
+        <!-- Regression Analysis -->
+        <div class="category">
+            <h2>📊 تحلیل رگرسیون</h2>
+            <div class="file-grid">
+                <div class="file-card">
+                    <div class="file-name">فرضیات رگرسیون</div>
+                    <div class="file-links">
+                        <a href="regression-inferential-assumptions.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/regression-inferential-assumptions.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/regression-inferential-assumptions.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">تمرین فرضیات رگرسیون</div>
+                    <div class="file-links">
+                        <a href="regression-inferential-assumptions-exercise.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/regression-inferential-assumptions-exercise.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/regression-inferential-assumptions-exercise.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">هم‌خطی چندگانه (VIF)</div>
+                    <div class="file-links">
+                        <a href="regression-multicollinearity-vif-tolerance.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/regression-multicollinearity-vif-tolerance.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/regression-multicollinearity-vif-tolerance.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">تمرین مداد (Pencil Exercise)</div>
+                    <div class="file-links">
+                        <a href="regression-pencil-exercise.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/regression-pencil-exercise.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/regression-pencil-exercise.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lab Exercises -->
+        <div class="category">
+            <h2>🧪 تمرین‌های آزمایشگاه</h2>
+            <div class="file-grid">
+                <div class="file-card">
+                    <div class="file-name">تمرین 1 (فارسی)</div>
+                    <div class="file-links">
+                        <a href="lab-exercise-01-persian.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-exercise-01-persian.html" class="btn-code" target="_blank">📄 HTML</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">تمرین 12 (فصل 5)</div>
+                    <div class="file-links">
+                        <a href="lab-exercise-12-chapter5.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-exercise-12-chapter5.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-exercise-12-chapter5.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">تمرین 16</div>
+                    <div class="file-links">
+                        <a href="lab-exercise-16.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-exercise-16.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-exercise-16.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">تمرین 19</div>
+                    <div class="file-links">
+                        <a href="lab-exercise-19.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-exercise-19.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-exercise-19.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">تمرین 20</div>
+                    <div class="file-links">
+                        <a href="lab-exercise-20.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-exercise-20.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-exercise-20.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">تمرین شبیه‌سازی 10</div>
+                    <div class="file-links">
+                        <a href="lab-simulation-exercise-10.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/lab-simulation-exercise-10.html" class="btn-code" target="_blank">📄 HTML</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Machine Learning -->
+        <div class="category">
+            <h2>🤖 یادگیری ماشین</h2>
+            <div class="file-grid">
+                <div class="file-card">
+                    <div class="file-name">الگوریتم KNN</div>
+                    <div class="file-links">
+                        <a href="ml-knn-algorithm.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/ml-knn-algorithm.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/ml-knn-algorithm.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">شبکه‌های عصبی گرافی (Karate Club)</div>
+                    <div class="file-links">
+                        <a href="ml-graph-neural-networks-karate-club.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/ml-graph-neural-networks-karate-club.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/ml-graph-neural-networks-karate-club.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Data Analysis -->
+        <div class="category">
+            <h2>🏥 تحلیل داده‌های پزشکی</h2>
+            <div class="file-grid">
+                <div class="file-card">
+                    <div class="file-name">تحلیل دیابت</div>
+                    <div class="file-links">
+                        <a href="medical-diabetes-analysis.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/medical-diabetes-analysis.html" class="btn-code" target="_blank">📄 HTML</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">تحلیل تیروئید</div>
+                    <div class="file-links">
+                        <a href="medical-thyroid-analysis.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/medical-thyroid-analysis.html" class="btn-code" target="_blank">📄 HTML</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Probability & Simulation -->
+        <div class="category">
+            <h2>🎲 احتمال و شبیه‌سازی</h2>
+            <div class="file-grid">
+                <div class="file-card">
+                    <div class="file-name">تمرین احتمال (فارسی)</div>
+                    <div class="file-links">
+                        <a href="probability-exercise-persian.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/probability-exercise-persian.html" class="btn-code" target="_blank">📄 HTML</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">تمرین فرآیند شبیه‌سازی</div>
+                    <div class="file-links">
+                        <a href="simulation-process-exercise.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/simulation-process-exercise.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/simulation-process-exercise.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">روش‌های تبدیل (Inverse & Box-Muller)</div>
+                    <div class="file-links">
+                        <a href="simulation-transform-methods-inverse-boxmuller.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/simulation-transform-methods-inverse-boxmuller.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/simulation-transform-methods-inverse-boxmuller.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+                
+                <div class="file-card">
+                    <div class="file-name">گزارش LCG</div>
+                    <div class="file-links">
+                        <a href="simulation-lcg-report.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/simulation-lcg-report.html" class="btn-code" target="_blank">📄 HTML</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Discrete Data Analysis -->
+        <div class="category">
+            <h2>📉 تحلیل داده‌های گسسته</h2>
+            <div class="file-grid">
+                <div class="file-card">
+                    <div class="file-name">تمرین 2 داده‌های گسسته</div>
+                    <div class="file-links">
+                        <a href="discrete-data-exercise-02.html" class="btn-view" target="_blank">👁️ مشاهده</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/discrete-data-exercise-02.html" class="btn-code" target="_blank">📄 HTML</a>
+                        <a href="https://github.com/amiralisatvati/-university-codes/blob/main/discrete-data-exercise-02.Rmd" class="btn-rmd" target="_blank">📝 Rmd</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💻 ساخته شده توسط <strong>Amir Ali Satvati</strong></p>
+            <p>🔗 <a href="https://github.com/amiralisatvati" style="color: #fff; text-decoration: none;">GitHub</a> | <a href="https://amiralisatvati.github.io" style="color: #fff; text-decoration: none;">وب‌سایت</a></p>
+        </div>
+    </div>
+</body>
+</html>
