@@ -1,0 +1,307 @@
+---
+title: "آشنایی با GNN و تحلیل شبکه"
+subtitle: "پیاده‌سازی الگوریتم‌های گرافی روی دیتاست Zachary's Karate Club"
+author:
+  - "امیرعلی سطوتی"
+  - "هدیه دهقانی"
+  - "صبا افتاده"
+  - "نیلوفر سادات شکوهی"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    css: "optimized-theme.css"
+    theme: default
+    highlight: pygments
+    toc: true
+    toc_float: true
+    lang: fa
+---
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.profile-container {
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: 40px;
+  animation: fade-up 0.8s ease-out;
+}
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+  padding: 10px 25px;
+  border-radius: 50px;
+  color: white !important; /* اجبار رنگ سفید */
+  text-decoration: none !important;
+  font-weight: bold;
+  font-family: sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-linkedin {
+  background: linear-gradient(45deg, #0077b5, #00a0dc);
+}
+.btn-github {
+  background: linear-gradient(45deg, #333, #555);
+}
+.profile-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  filter: brightness(1.1);
+}
+.profile-btn i {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+</style>
+
+<div class="profile-container">
+  <a href="https://www.linkedin.com/in/amirali-satvati/" target="_blank" class="profile-btn btn-linkedin">
+    <i class="fab fa-linkedin"></i> LinkedIn
+  </a>
+  <a href="https://github.com/amiralisatvati" target="_blank" class="profile-btn btn-github">
+    <i class="fab fa-github"></i> GitHub
+  </a>
+</div>
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, digits = 2)
+knitr::knit_hooks$set(inline = function(x) {
+  if(is.numeric(x)) {
+    round(x, 2)
+  }
+})
+```
+
+<div class="report-header">
+  <span style="font-weight:bold; color:var(--primary);">ارائه کلاسی GNN</span>
+  <span style=
+"font-size:0.9em;">نیمسال جاری</span>
+</div>
+# مقدمه شبکه‌های عصبی گرافی
+
+<div class="main-container">
+
+<div class="box-concept">
+
+**مقدمه و تعاریف پایه**
+
+در چشم‌انداز نوین یادگیری ماشین، گراف‌ها ابزاری بی‌رقیب برای مدل‌سازی روابط پیچیده بین موجودیت‌ها هستند. در حالی که در مدل‌های سنتی، داده‌ها معمولاً به‌صورت سطرهای مستقل یک جدول در نظر گرفته می‌شوند، دنیای واقعی سرشار از وابستگی و ارتباط است.
+
+در داده‌های گرافی، «ساختار ارتباطات» (Structure) به اندازهٔ «ویژگی‌های گره‌ها» (Features) حاوی اطلاعات حیاتی است؛ نادیده گرفتن یال‌ها یعنی حذف بخش بزرگی از ماهیت مسئله، و دقیقاً همین‌جاست که شبکه‌های عصبی گرافی (GNN) وارد میدان می‌شوند.
+
+</div>
+
+<div class="box-math">
+
+**ساختار ریاضی**
+
+یک گراف $G$ را معمولاً به‌صورت $G = (V, E)$ تعریف می‌کنند که در آن:
+
+* $V$: مجموعه‌ی گره‌ها (Nodes) یا رأس‌ها؛ هر گره می‌تواند نشانگر یک فرد، شیء، مولکول یا سند باشد.
+* $E$: مجموعه‌ی یال‌ها (Edges) که بیانگر رابطه یا تعامل بین دو گره است.
+
+ورودی استاندارد یک GNN شامل دو مؤلفه کلیدی است:
+
+1. **ماتریس ویژگی‌ها $X$**: اگر گراف $N$ گره و هر گره $D$ ویژگی داشته باشد، ماتریسی با ابعاد $N \times D$ است که هر سطر آن بردار ویژگی یک گره را نشان می‌دهد.
+2. **ماتریس مجاورت $A$**: ماتریسی که ساختار اتصالات را کدگذاری می‌کند؛ وجود یال بین گره $i$ و $j$ معمولاً با ۱ و نبود آن با صفر در درایه $A_{ij}$ نشان داده می‌شود.
+
+</div>
+
+<div class="box-info">
+
+**انتقال پیام (Message Passing)**
+
+قلب تپندهٔ محاسبات در GNNها، مکانیزم «ارسال پیام» است. در هر لایه، هر گره پیام‌هایی از همسایگان خود دریافت می‌کند، آن‌ها را تجمیع کرده و با وضعیت فعلی خودش ترکیب می‌کند تا به یک نمایش (Embedding) جدید و غنی‌تر برسد.
+
+این فرایند سبب می‌شود که پس از چند لایه، هر گره نه‌تنها اطلاعات خودش، بلکه دانش ساختاری همسایگان نزدیک و دورتر را نیز در بردار ویژگی‌اش حمل کند.
+
+</div>
+
+<div class="box-math">
+
+**فرمول به‌روزرسانی (Update Rule)**
+
+در قالب ریاضی، به‌روزرسانی وضعیت گره $v$ در لایهٔ $k$-ام را می‌توان به‌شکل کلی زیر نوشت:
+
+<div class="math-display">
+$$h_v^{(k)} = \sigma \left( W^{(k)} \cdot \text{AGGREGATE}\left( \{\, h_u^{(k-1)} : u \in \mathcal{N}(v) \,\} \right) \right)$$
+</div>
+
+* $h_v^{(k)}$: بردار تعبیه (Embedding) گره $v$ در لایهٔ $k$.
+* $\mathcal{N}(v)$: مجموعهٔ همسایگان گره $v$. **نکته:** در GNNها معمولاً خود گره $v$ نیز به این مجموعه اضافه می‌شود (Self-loop) تا اطلاعات خودش حفظ شود.
+* $h_u^{(k-1)}$: پیام‌های دریافتی از گره‌های همسایه در لایهٔ قبل.
+* $\text{AGGREGATE}$: تابعی مستقل از ترتیب (مانند جمع، میانگین یا Max) که پیام‌ها را فشرده می‌کند.
+* $W^{(k)}$: ماتریس وزن‌های قابل یادگیری شبکه.
+* $\sigma$: تابع فعال‌ساز غیرخطی (مانند ReLU).
+
+هدف نهایی این است که با تکرار این چرخه، برداری بسازیم که هم «محتوای گره» و هم «موقعیت آن در شبکه» را توصیف کند.
+
+</div>
+
+</div>
+
+---
+
+# باشگاه کاراته زاخاری (Zachary's Karate Club)
+
+<div class="main-container">
+
+<div class="box-info">
+
+**داستان داده‌ها**
+
+دیتاست **Zachary's Karate Club** شبکهٔ اجتماعی ۳۴ عضو یک باشگاه کاراته دانشگاهی را روایت می‌کند. پس از یک اختلاف شدید بین مربی (Mr. Hi) و مدیر باشگاه (Officer)، این گروه عملاً دوشقه شد.
+
+در این گراف، هر گره یک دانشجو و هر یال نشان‌دهنده تعاملات اجتماعی خارج از کلاس است. چالش کلاسیک یادگیری ماشین در اینجا این است: آیا می‌توانیم فقط با نگاه کردن به الگوی دوستی‌ها (ساختار گراف)، پیش‌بینی کنیم هر عضو به کدام جناح (مربی یا مدیر) پیوسته است؟
+
+این سناریو به عنوان «Hello World» تحلیل شبکه شناخته می‌شود و بنچمارکی عالی برای تست الگوریتم‌های GNN است.
+
+</div>
+
+</div>
+
+---
+
+# کتابخانه‌های تحلیل گراف در R
+
+<div class="main-container">
+
+<div class="box-concept">
+
+**ابزارهای تحلیل**
+
+برای پیاده‌سازی و تصویرسازی این شبکه در زبان R، از مثلث قدرتمند `igraph`، `tidygraph` و `ggraph` استفاده می‌کنیم.
+این ابزارها زنجیرهٔ کامل «مدل‌سازی»، «دست‌کاری داده به روش Tidy» و «تصویرسازی لایه‌محور» را فراهم می‌کنند.
+
+</div>
+
+<div class="box-math">
+
+**بارگذاری کتابخانه‌ها**
+
+کد زیر این بسته‌ها را فراخوانی می‌کند:
+
+```{r libraries, message=FALSE, warning=FALSE, paged.print=FALSE}
+library(igraph)
+library(tidygraph)
+library(ggraph)
+```
+
+* `igraph`: موتور محاسباتی گراف و الگوریتم‌های پایه.
+* `tidygraph`: رابطی که گراف را شبیه به جداول دیتابیس (Tibble) مدیریت می‌کند.
+* `ggraph`: افزونه‌ای بر ggplot2 برای رسم گراف‌های زیبا و گویا.
+
+</div>
+
+</div>
+
+## ۱. آماده‌سازی داده‌ها و برچسب‌گذاری
+
+<div class="main-container">
+
+<div class="box-concept">
+
+**هدف: ایجاد "Ground Truth"**
+
+در مسائل واقعی GNN، ما معمولاً برچسب‌ها را داریم و مدل را آموزش می‌دهیم. اما در این تحلیل اکتشافی، ما از یک الگوریتم خوشه‌بندی کلاسیک به نام **Louvain** استفاده می‌کنیم تا ببینیم گروه‌های طبیعی شبکه کجا هستند.
+
+خروجی این مرحله، گرافی است که در آن برای هر گره، یک شماره گروه (Community) تعیین شده است. این شماره می‌تواند به عنوان برچسب (Label) برای آموزش یا تست یک GNN فرضی در نظر گرفته شود.
+
+</div>
+
+<div class="box-math">
+
+**کد ساخت و پردازش**
+
+در قطعه کد زیر، گراف استاندارد زاخاری را می‌سازیم، آن را به فرمت Tidy تبدیل کرده و بلافاصله الگوریتم تشخیص اجتماع را روی آن اجرا می‌کنیم:
+
+```{r process}
+graph_data <- as_tbl_graph(make_graph("Zachary")) %>%
+  mutate(community = factor(group_louvain()))
+```
+
+تابع `group_louvain()` با بهینه‌سازی معیار Modularity، گره‌هایی که اتصالات متراکم‌تری با هم دارند را در یک گروه قرار می‌دهد. این دقیقاً همان ساختاری است که GNNها نیز تلاش می‌کنند آن را یاد بگیرند.
+
+</div>
+
+<div class="box-info">
+
+**الگوریتم Louvain چیست؟**
+
+الگوریتم Louvain یک روش غیر-عصبی (Non-neural) و حریصانه برای کشف جوامع در شبکه است.
+در گراف زاخاری، این الگوریتم معمولاً موفق می‌شود دو یا چند دستهٔ اصلی را جدا کند که انطباق بسیار بالایی با واقعیت تاریخی (جناح مربی و جناح مدیر) دارد. بنابراین، نتیجهٔ این الگوریتم تأیید می‌کند که ساختار گراف حاوی اطلاعات کافی برای جداسازی کلاس‌ها هست.
+
+</div>
+
+</div>
+
+---
+
+# ۲. تصویرسازی شبکه (Visualization)
+
+<div class="main-container">
+
+<div class="box-concept">
+
+**تحلیل بصری**
+
+حال که گروه‌ها توسط الگوریتم مشخص شدند، شبکه را رسم می‌کنیم. هدف این است که ببینیم آیا گره‌های هم‌رنگ (هم‌گروه) در کنار هم قرار می‌گیرند یا خیر.
+در GNNها، فرض اصلی (Homophily) این است که گره‌های متصل به هم، ویژگی‌ها یا برچسب‌های مشابهی دارند.
+
+</div>
+
+<div class="box-math">
+
+**رسم گراف با ggraph**
+
+از الگوریتم چیدمان Fruchterman-Reingold (`fr`) استفاده می‌کنیم که گره‌های متصل را فیزیکی به هم نزدیک‌تر می‌کند:
+
+```{r plot, fig.align='center', fig.height=7, fig.width=9, warning=FALSE}
+ggraph(graph_data, layout = 'fr') +
+  geom_edge_link(color = "#94a3b8", alpha = 0.6, show.legend = FALSE) +
+  geom_node_point(aes(color = community), size = 6) +
+  scale_color_brewer(palette = "Set1") +
+  theme_graph() +
+  labs(title = "تحلیل ساختاری: خوشه‌های باشگاه کاراته",
+       subtitle = "رنگ‌ها نشان‌دهنده جوامع کشف‌شده توسط الگوریتم Louvain هستند")
+```
+
+* `geom_edge_link`: رسم یال‌ها (کمرنگ برای تمرکز بر گره‌ها).
+* `geom_node_point`: رسم گره‌ها با رنگ‌بندی بر اساس ستون `community`.
+
+</div>
+
+</div>
+
+---
+
+# ۳. جمع‌بندی نهایی
+
+<div class="main-container">
+
+<div class="box-result">
+
+**نتیجه‌گیری مشاهدات**
+
+تصویر خروجی به وضوح نشان می‌دهد که شبکه به چند قطب اصلی تقسیم شده است. الگوریتم Louvain صرفاً با تکیه بر یال‌ها توانست اعضا را دسته‌بندی کند.
+این همان کاری است که یک GNN به روشی پیچیده‌تر و با قابلیت تعمیم‌پیذیری بالاتر انجام می‌دهد: یادگیری بردار‌هایی که گره‌های متصل را در فضای برداری به هم نزدیک می‌کند تا دسته‌بندی آن‌ها ساده شود.
+
+</div>
+
+<div class="box-math">
+
+**تحلیل ساختاری**
+
+گره‌های مرکزی (هاب‌ها) در وسط خوشه‌ها قرار دارند و اعضای مرزی نقش پل ارتباطی را بازی می‌کنند.
+این مثال ثابت می‌کند که در داده‌های شبکه‌ای، "به من بگو دوستانت کیستند تا بگویم کیستی" یک اصل علمی معتبر است. GNNها دقیقاً همین اصل را با مکانیزم "Message Passing" مدل‌سازی ریاضی می‌کنند.
+
+</div>
+
+</div>
+
+<div class="report-footer">
+  طراحی شده برای ارائه کلاسی | پاییز ۱۴۰۴
+</div>
