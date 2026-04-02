@@ -1,0 +1,100 @@
+---
+title: "تمرین فصل 4"
+author: "امیرعلی سطوتی"
+date: "۱۴۰۴/۰۸/۰۹"
+output:
+  html_document:
+    lang: fa
+    theme: bootstrap
+    highlight: tango
+    css: "mystyle1.css"
+    toc: true
+    toc_float: true
+    number_sections: true
+    pandoc_args: [
+      "--variable", "dir:rtl",
+      "--variable", "lang:fa"
+    ]
+---
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,digits = 2)
+knitr::knit_hooks$set(inline= function(x) {
+  if(is.numeric(x)) {
+    round(x,2)
+  }
+})
+```
+
+
+# آزمون علامت (Sign Test)
+بررسی می‌کند که آیا میانه (Median) داده‌ها به طور معناداری با 0.5 متفاوت است یا خیر.
+
+```{r}
+data <- c(0.34, 0.54, 0.85, 0.34, 0.21, 0.89, 0.20, 0.75, 0.36, 0.82, 0.12)
+mu0 <- 0.5
+signs <- sign(data - mu0)
+data1 <- signs[signs != 0]
+ds <- sum(data1==1)
+n<- length(data1)
+binom.test(x = ds,n =n,p = 0.5)
+```
+
+## تفسیر
+
+<div class="box">
+  <p>با توجه به p-value = 1، هیچ تفاوت آماری معناداری بین احتمال موفقیت مشاهده شده (0.45) و احتمال فرضی 0.5 وجود ندارد و این اختلاف کاملاً شانسی است.</p>
+
+</div>
+
+# آزمون گردش‌ها (Runs Test)
+این آزمون تصادفی بودن توالی داده‌ها را بررسی می‌کند (آیا داده‌ها به صورت خوشه‌ای (cluster) آمده‌اند یا تصادفی).
+
+
+```{r}
+library(DescTools)
+RunsTest(data)
+```
+
+## تفسیر
+
+<div class="box">
+ 
+  
+از آنجایی که p-value (0.1126) بزرگتر از سطح معناداری رایج (0.05) است، ما دلیلی برای رد کردن فرضیه صفر (H0) نداریم؛ بنابراین، توالی داده‌ها تصادفی (random) تلقی می‌شود و الگوی غیرتصادفی یا روند خاصی در آن‌ها مشاهده نمی‌شود.
+
+</div>
+# شمارش طول گردش‌های بالا/پایین
+بررسی می‌کند که توالی داده‌ها چند بار "صعودی" (Up) و چند بار "نزولی" (Down) بوده و طول هر کدام از این گردش‌ها چقدر بوده است.
+
+```{r}
+
+mcat <-round( 3.33*log(length(data))+1)   
+signs <- sign(diff(data))
+
+signs <- signs[signs != 0]
+
+runl <- rle(signs)$lengths
+
+obs_counts<- numeric(mcat)
+obss <- c(1:(mcat - 1), paste0(">=", mcat))
+
+
+for (len in runl) {
+  if (len >= mcat) {
+    
+    obs_counts[mcat] <- obs_counts[mcat] + 1
+  } else {
+  
+    obs_counts[len] <- obs_counts[len] + 1
+  }
+}
+
+print(obs_counts)
+```
+
+
+
+
+
+

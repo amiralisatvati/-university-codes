@@ -1,0 +1,197 @@
+---
+title: "شبیه‌سازی متغیرهای تصادفی"
+subtitle: "کاربرد روش‌های تبدیل مستقیم (معکوس و باکس-مولر)"
+author: "امیرعلی سطوتی"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    css: "optimized-theme.css"
+    theme: default
+    highlight: kate
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    df_print: paged
+    lang: fa
+---
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.profile-container {
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: 40px;
+  animation: fade-up 0.8s ease-out;
+}
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+  padding: 10px 25px;
+  border-radius: 50px;
+  color: white !important; /* اجبار رنگ سفید */
+  text-decoration: none !important;
+  font-weight: bold;
+  font-family: sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-linkedin {
+  background: linear-gradient(45deg, #0077b5, #00a0dc);
+}
+.btn-github {
+  background: linear-gradient(45deg, #333, #555);
+}
+.profile-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  filter: brightness(1.1);
+}
+.profile-btn i {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+</style>
+
+<div class="profile-container">
+  <a href="https://www.linkedin.com/in/amirali-satvati/" target="_blank" class="profile-btn btn-linkedin">
+    <i class="fab fa-linkedin"></i> LinkedIn
+  </a>
+  <a href="https://github.com/amiralisatvati" target="_blank" class="profile-btn btn-github">
+    <i class="fab fa-github"></i> GitHub
+  </a>
+</div>
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, digits = 2)
+knitr::knit_hooks$set(inline = function(x) {
+  if(is.numeric(x)) {
+    round(x, 2)
+  }
+})
+```
+
+# بخش اول: روش مستقیم (Direct Method)
+
+روش مستقیم که اغلب با نام **روش تبدیل معکوس (Inverse Transform)** نیز شناخته می‌شود، یکی از اصولی‌ترین روش‌های تولید متغیرهای تصادفی است. ویژگی اصلی این روش «مستقیم» بودن آن است؛ یعنی برخلاف روش‌های مبتنی بر آزمون و خطا (مانند روش رد-پذیرش)، در اینجا هر عدد تصادفی یکنواخت ($U$) با یک نگاشت یک‌به‌یک و قطعی، مستقیماً به یک متغیر تصادفی از توزیع هدف تبدیل می‌شود.
+
+اصل حاکم بر این روش، قضیه تبدیل انتگرال احتمال است: اگر $U \sim Uniform(0,1)$ باشد، آنگاه $X = F^{-1}(U)$ دارای تابع توزیع تجمعی $F$ خواهد بود.
+
+در این بخش، دو توزیع را با این روش شبیه‌سازی می‌کنیم:
+1.  **توزیع کوشی:** که دارای معکوس تحلیلی ساده است.
+2.  **توزیع t-استیودنت:** که از روش مستقیم عددی (محاسبه معکوس توسط توابع داخلی) استفاده می‌کند.
+
+---
+
+## شبیه‌سازی مستقیم توزیع کوشی
+
+توزیع کوشی نمونه‌ای عالی برای روش مستقیم تحلیلی است، زیرا تابع توزیع تجمعی (CDF) آن فرم بسته دارد و معکوس کردن آن ساده است.
+
+### الف) استخراج فرمول مستقیم
+تابع توزیع تجمعی کوشی با پارامتر مکان $\mu$ و مقیاس $\sigma$:
+
+$$F(x; \mu, \sigma) = \frac{1}{\pi} \arctan\left(\frac{x - \mu}{\sigma}\right) + \frac{1}{2}$$
+
+برای یافتن فرمول مستقیم تولید $X$، معادله $F(x) = U$ را حل می‌کنیم:
+
+$$U = \frac{1}{\pi} \arctan\left(\frac{x - \mu}{\sigma}\right) + \frac{1}{2}$$
+
+با جابجایی جملات و معکوس کردن تانژانت، به رابطه صریح زیر می‌رسیم که اساس شبیه‌سازی ماست:
+
+$$X = \mu + \sigma \cdot \tan\left[\pi (U - 0.5)\right]$$
+
+---
+
+## شبیه‌سازی مستقیم توزیع t-استیودنت
+
+در توزیع $t$، فرم جبری CDF شامل انتگرال‌هایی (تابع بتای ناقص) است که به صورت تحلیلی ساده معکوس نمی‌شوند. اما همچنان روش ما **«مستقیم»** است، با این تفاوت که حل معادله $F(x)=U$ توسط روش‌های عددی دقیق انجام می‌شود.
+
+<div class="box-info">
+در اینجا از تابع کوانتایل (Quantile Function) استفاده می‌کنیم. تابع `qt` در زبان R، همان $F^{-1}(U)$ است که مقدار $U$ را مستقیماً به مقدار متناظر در توزیع t می‌نگارد.
+</div>
+
+### پیاده‌سازی کد R (روش مستقیم)
+
+```{r setup_cauchy}
+set.seed(42)
+
+mu <- 0    
+sigma <- 1 
+U <- runif(1000, 0, 1)
+cauchy_sim <- mu + sigma * tan(pi * (U - 0.5))
+t_sim <- qt(U, df = 10)
+
+head(data.frame(Uniform=U, Cauchy=cauchy_sim, T_Student=t_sim))
+```
+
+---
+
+# بخش دوم: روش باکس-مولر (Box-Muller)
+
+روش باکس-مولر نیز یک تکنیک هوشمندانه برای تولید متغیرهای نرمال است. این روش نیز در دسته روش‌های تبدیل دقیق قرار می‌گیرد که با استفاده از ویژگی‌های مختصات قطبی، دو متغیر یکنواخت را به دو متغیر نرمال تبدیل می‌کند.
+
+### الگوریتم تبدیل
+
+این روش از دو متغیر یکنواخت $U_1, U_2$ استفاده کرده و با تبدیلات زیر، دو متغیر نرمال استاندارد مستقل $Z_1, Z_2$ تولید می‌کند:
+
+$$Z_1 = \sqrt{-2\ln(U_1)} \cos(2\pi U_2)$$
+$$Z_2 = \sqrt{-2\ln(U_1)} \sin(2\pi U_2)$$
+
+### پیاده‌سازی و آنالیز در R
+
+در کد زیر، علاوه بر تولید داده‌ها، با رسم نمودار هیستوگرام و نمودار چندک-چندک (QQ Plot) نرمال بودن داده‌ها را بررسی می‌کنیم.
+
+```{r box_muller_sim, fig.align='center', message=FALSE, warning=FALSE}
+set.seed(42)
+
+U1 <- runif(1000)
+U2 <- runif(1000)
+
+
+Z1 <- sqrt(-2 * log(U1)) * cos(2 * pi * U2)
+Z2 <- sqrt(-2 * log(U1)) * sin(2 * pi * U2)
+
+
+hist(Z1, prob=TRUE)
+curve(dnorm(x, mean=0, sd=1), add=TRUE, col="#f59e0b", lwd=3)
+
+
+qqnorm(Z1, col="#0f766e", pch=19, main="نمودار QQ برای Z1")
+qqline(Z1, col = "#ef4444", lwd = 2)
+
+
+shapiro.test(Z1)
+
+```
+
+<div class="box-result">
+**تفسیر نتایج شبیه‌سازی:**
+
+1.  **هیستوگرام:** نمودار میله‌ای به خوبی با منحنی زنگوله‌ای (نارنجی رنگ) همپوشانی دارد. این یعنی میانگین حدود ۰ و انحراف معیار حدود ۱ است.
+2.  **QQ Plot:** نقاط داده‌ها (سبز رنگ) دقیقاً روی خط قرمز قرار گرفته‌اند که نشان‌دهنده توزیع نرمال کامل است.
+3.  **آماره آزمون شاپیرو (W):** مقدار $W = 0.9982$ بسیار به عدد ۱ نزدیک است. این عدد کمی نشان‌دهنده‌ی همخوانی فوق‌العاده‌ی داده‌های تولید شده با توزیع نرمال نظری است.
+</div>
+
+## تبدیل خطی توزیع نرمال
+
+در نهایت، یک تبدیل خطی روی متغیر نرمال استاندارد $Z_1$ اعمال می‌کنیم تا متغیری با میانگین و واریانس دلخواه بسازیم. اگر $X = \sigma Z + \mu$ باشد، انتظار داریم میانگین ۱۹ و انحراف معیار ۳.۷ شود.
+
+```{r linear_transform}
+# تبدیل خطی: میانگین 19 و انحراف معیار 3.7
+X1 <- 3.7 * Z1 + 19
+
+
+hist(X1, prob=TRUE)
+curve(dnorm(x, mean=19, sd=3.7), add=TRUE, col="#059669", lwd=3)
+shapiro.test(X1)
+```
+
+<div class="box-result"> تحلیل: با اعمال تبدیل خطی، شکل توزیع همچنان نرمال باقی می‌ماند (که توسط تست شاپیرو تایید می‌شود)، اما مرکز توزیع به ۱۹ و پراکندگی آن متناسب با ضریب ۳.۷ تغییر کرده است. </div>
+
+<div class="report-footer">
+  طراحی و پیاده‌سازی: Amirali Satvati | پاییز 1404
+</div>
